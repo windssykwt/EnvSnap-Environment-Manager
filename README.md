@@ -1,4 +1,4 @@
-# ENVChanger
+# EnvSnap - Environment Manager
 
 A Windows desktop app for managing and switching environment variables through presets. Built with Electron, React, and TypeScript.
 
@@ -12,6 +12,10 @@ A Windows desktop app for managing and switching environment variables through p
 - Portable or installable
 
 ## Screenshots
+<img width="960" height="680" alt="14194586-3d32-40a0-9b04-158e5d63b715" src="https://github.com/user-attachments/assets/4ec9c182-330f-4ccb-ad74-d3a605d6770f" />
+<img width="960" height="680" alt="b7961a81-9d5e-4a7b-b732-b7b93b99a6f7" src="https://github.com/user-attachments/assets/ded4eb6e-cba4-4694-8c07-01f40d574a87" />
+<img width="960" height="680" alt="07eeab1e-abf4-4ed2-9ab7-1957aad75dcf" src="https://github.com/user-attachments/assets/4cfea98e-7b72-4566-9627-c6290092e875" />
+
 
 <!-- Add screenshots here -->
 
@@ -24,11 +28,11 @@ A Windows desktop app for managing and switching environment variables through p
 
 ### Installer
 
-Download `ENVChanger Setup x.x.x.exe` from [Releases](../../releases), run it, and follow the prompts.
+Download `EnvSnap Setup x.x.x.exe` from [Releases](../../releases), run it, and follow the prompts.
 
 ### Portable
 
-Download `ENVChanger x.x.x.exe` (single portable executable) or `ENVChanger-x.x.x-win.zip` (extract and run) from [Releases](../../releases).
+Download `EnvSnap x.x.x.exe` (single portable executable) or `EnvSnap-x.x.x-win.zip` (extract and run) from [Releases](../../releases).
 
 ## Development
 
@@ -82,7 +86,7 @@ src/
 
 ## How it works
 
-1. Presets are stored locally as JSON in `%APPDATA%/ENVChanger/`
+1. Presets are stored locally as JSON in `%APPDATA%/EnvSnap/`
 2. Activation writes variables via `[Environment]::SetEnvironmentVariable(..., 'User')` in PowerShell
 3. After writing, the app broadcasts `WM_SETTINGCHANGE` so other apps pick up the change
 4. A pre-activation snapshot is saved automatically — deactivating or rolling back restores previous values
