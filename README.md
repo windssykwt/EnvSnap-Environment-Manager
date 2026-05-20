@@ -15,6 +15,7 @@ A Windows desktop app for managing and switching environment variables through p
 <img width="960" height="680" alt="14194586-3d32-40a0-9b04-158e5d63b715" src="https://github.com/user-attachments/assets/4ec9c182-330f-4ccb-ad74-d3a605d6770f" />
 <img width="960" height="680" alt="b7961a81-9d5e-4a7b-b732-b7b93b99a6f7" src="https://github.com/user-attachments/assets/ded4eb6e-cba4-4694-8c07-01f40d574a87" />
 <img width="960" height="680" alt="07eeab1e-abf4-4ed2-9ab7-1957aad75dcf" src="https://github.com/user-attachments/assets/4cfea98e-7b72-4566-9627-c6290092e875" />
+<img width="289" height="308" alt="03b3bbc5-1001-4982-968e-7559dda0b733" src="https://github.com/user-attachments/assets/e41ee648-1f16-4829-bcd0-9a5cbdd29e67" />
 
 
 <!-- Add screenshots here -->
