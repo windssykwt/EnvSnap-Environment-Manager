@@ -1,0 +1,29 @@
+appId: com.envsnap.app
+productName: EnvSnap
+directories:
+  output: out
+  buildResources: resources
+extraResources:
+  - from: resources/
+    to: .
+    filter:
+      - "*.ico"
+      - "**/*.ico"
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: portable
+      arch: [x64]
+    - target: zip
+      arch: [x64]
+  icon: resources/icon.ico
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  installerIcon: resources/icon.ico
+  uninstallerIcon: resources/icon.ico
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: EnvSnap
+  perMachine: false
