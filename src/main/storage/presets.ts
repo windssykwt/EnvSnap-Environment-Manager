@@ -64,7 +64,10 @@ export async function deletePreset(id: string): Promise<boolean> {
     return { next, result: removed }
   })
   if (!archived) return false
-  await archivePreset(archived)
+  // Only archive to history if the preset had variables worth preserving.
+  if (archived.variables.length > 0) {
+    await archivePreset(archived)
+  }
   return true
 }
 

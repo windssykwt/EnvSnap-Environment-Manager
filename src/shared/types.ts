@@ -1,6 +1,8 @@
 export interface Variable {
   key: string
   value: string
+  /** When true, the value is treated as sensitive (API key, token, etc.) and masked in the UI. */
+  isSecret?: boolean
 }
 
 export interface Preset {

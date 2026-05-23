@@ -586,10 +586,10 @@ input {
   align-items: center;
   justify-content: center;
   gap: 7px;
-  background: rgba(46, 76, 241, 0.15);
-  border: 1px solid rgba(46, 76, 241, 0.35);
+  background: transparent;
+  border: 1.5px dashed rgba(160, 180, 255, 0.45);
   border-radius: 10px;
-  color: #a0b4ff;
+  color: #c0d0ff;
   font-weight: 600;
   font-size: 13px;
   cursor: pointer;
@@ -597,8 +597,9 @@ input {
 }
 
 .btn-create-large:hover {
-  background: rgba(46, 76, 241, 0.25);
-  border-color: rgba(46, 76, 241, 0.55);
+  background: rgba(46, 76, 241, 0.12);
+  border-color: rgba(160, 180, 255, 0.7);
+  border-style: dashed;
   color: #ffffff;
 }
 
@@ -702,6 +703,7 @@ input {
   color: #ffffff !important;
   width: 220px;
   min-width: 150px;
+  flex: 1 1 auto;
   flex-shrink: 0;
   outline: none !important;
   box-shadow: none !important;
@@ -719,8 +721,8 @@ input {
 .btn-icon-action {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
+  justify-content: center;
+  padding: 8px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border) !important;
   border-radius: 8px;
@@ -937,19 +939,22 @@ input:-webkit-autofill:focus {
 }
 
 /* Unsaved-edits pill, shown next to the active pill in the preset header. */
-.dirty-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(255, 191, 73, 0.12);
-  border: 1px solid rgba(255, 191, 73, 0.45);
-  color: #f0b85c;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  white-space: nowrap;
+.save-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.save-indicator.is-dirty {
+  background: #f0b85c;
+  box-shadow: 0 0 6px rgba(240, 184, 92, 0.5);
+}
+
+.save-indicator.is-saved {
+  background: #3fb950;
+  box-shadow: 0 0 6px rgba(63, 185, 80, 0.5);
 }
   width: 100%;
   border: none;
@@ -1245,12 +1250,12 @@ input:-webkit-autofill:focus {
 }
 
 .vt-cell-actions .vt-icon-btn {
-  opacity: 0;
+  opacity: 0.85;
 }
 
 .vt-row-data:hover .vt-cell-actions .vt-icon-btn,
 .vt-row-data:focus-within .vt-cell-actions .vt-icon-btn {
-  opacity: 0.85;
+  opacity: 1;
 }
 
 .vt-delete {
@@ -1386,6 +1391,16 @@ input:-webkit-autofill:focus {
   background: #3f5aff;
 }
 
+.btn-destructive {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: rgba(220, 38, 38, 0.4);
+}
+
+.btn-destructive:hover:not(:disabled) {
+  background: #ef4444;
+}
+
 .btn-secondary {
   background: #ffffff;
   color: var(--text);
@@ -1438,7 +1453,7 @@ input:-webkit-autofill:focus {
 
 .modal p {
   color: var(--text-muted);
-  margin-bottom: 20px;
+  margin-bottom: 28px;
 }
 
 .modal-actions {
@@ -1460,6 +1475,18 @@ input:-webkit-autofill:focus {
   margin-bottom: 14px;
 }
 
+.preview-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.preview-modal-title svg {
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
 .preview-modal-header h3 {
   margin-bottom: 4px;
 }
@@ -1468,6 +1495,21 @@ input:-webkit-autofill:focus {
   margin: 0 !important;
   font-size: 12px;
   color: var(--text-faint);
+}
+
+.preview-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  color: var(--text-faint);
+  font-size: 13px;
+}
+
+.preview-empty-state svg {
+  opacity: 0.4;
 }
 
 .preview-modal-body {

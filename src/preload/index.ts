@@ -5,9 +5,9 @@ const api = {
   preset: {
     list: () => ipcRenderer.invoke(IPC.PRESET.LIST),
     get: (id: string) => ipcRenderer.invoke(IPC.PRESET.GET, id),
-    create: (data: { name: string; variables?: Array<{ key: string; value: string }> }) =>
+    create: (data: { name: string; variables?: Array<{ key: string; value: string; isSecret?: boolean }> }) =>
       ipcRenderer.invoke(IPC.PRESET.CREATE, data),
-    update: (id: string, data: { name?: string; variables?: Array<{ key: string; value: string }> }) =>
+    update: (id: string, data: { name?: string; variables?: Array<{ key: string; value: string; isSecret?: boolean }> }) =>
       ipcRenderer.invoke(IPC.PRESET.UPDATE, id, data),
     delete: (id: string) => ipcRenderer.invoke(IPC.PRESET.DELETE, id),
     duplicate: (id: string) => ipcRenderer.invoke(IPC.PRESET.DUPLICATE, id),

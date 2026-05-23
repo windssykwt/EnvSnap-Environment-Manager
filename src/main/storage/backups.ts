@@ -50,7 +50,7 @@ export function archivePreset(preset: Preset): Promise<PresetArchiveBackup> {
     originalPresetId: preset.id,
     presetName: preset.name,
     createdAt: new Date().toISOString(),
-    variables: preset.variables.map(v => ({ key: v.key, value: v.value })),
+    variables: preset.variables.map(v => ({ key: v.key, value: v.value, ...(v.isSecret !== undefined ? { isSecret: v.isSecret } : {}) })),
   }
   return mutateBackups(file => {
     const cleaned = file.backups.filter(isValidBackup)

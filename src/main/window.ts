@@ -15,7 +15,7 @@ export function getMainWindow(): BrowserWindow | null {
 
 export function createWindow(showOnReady = true): BrowserWindow {
   mainWindow = new BrowserWindow({
-    width: 960,
+    width: 1090,
     height: 680,
     minWidth: 720,
     minHeight: 480,

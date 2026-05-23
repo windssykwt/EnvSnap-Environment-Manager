@@ -536,12 +536,12 @@ export function registerIpcHandlers(): void {
       for (const v of incoming) {
         const idx = indexByKey.get(v.key)
         if (idx === undefined) {
-          merged.push({ key: v.key, value: v.value })
+          merged.push({ key: v.key, value: v.value, ...(v.isSecret !== undefined ? { isSecret: v.isSecret } : {}) })
           indexByKey.set(v.key, merged.length - 1)
           added++
         } else {
           if (merged[idx].value !== v.value) updated++
-          merged[idx] = { key: v.key, value: v.value }
+          merged[idx] = { key: v.key, value: v.value, ...(v.isSecret !== undefined ? { isSecret: v.isSecret } : {}) }
         }
       }
 

@@ -82,6 +82,7 @@ export function SettingsPanel() {
           showToast(result.error?.message ?? 'Failed to import config', 'error')
         }
       },
+      { destructive: true, confirmLabel: 'Replace' },
     )
   }
 

@@ -37,6 +37,7 @@ export function Sidebar() {
           showToast('Preset moved to history', 'success')
         }
       },
+      { destructive: true, confirmLabel: 'Delete' },
     )
   }
 

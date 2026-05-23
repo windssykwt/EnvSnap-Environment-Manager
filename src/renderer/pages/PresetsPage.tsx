@@ -183,7 +183,6 @@ export function PresetsPage() {
                     <polyline points="7 10 12 15 17 10" />
                     <line x1="12" y1="15" x2="12" y2="3" />
                   </svg>
-                  <span>Import</span>
                 </button>
                 <button
                   type="button"
@@ -197,14 +196,13 @@ export function PresetsPage() {
                     <polyline points="17 8 12 3 7 8" />
                     <line x1="12" y1="3" x2="12" y2="15" />
                   </svg>
-                  <span>Export</span>
                 </button>
               </div>
-              {isDirty && (
-                <span className="dirty-pill" title="You have unsaved edits">
-                  Unsaved
-                </span>
-              )}
+              <span
+                className={`save-indicator${isDirty ? ' is-dirty' : ' is-saved'}`}
+                title={isDirty ? 'Unsaved changes' : 'All changes saved'}
+                aria-label={isDirty ? 'Unsaved changes' : 'All changes saved'}
+              />
               {isActive && (
                 <span className="active-pill" title="This preset is currently applied to Windows">
                   <span className="active-pill-dot" aria-hidden="true" />

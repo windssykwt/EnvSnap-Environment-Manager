@@ -83,6 +83,7 @@ export function ActionBar({ presetId, onPersist, hasInvalidKeys }: ActionBarProp
           showToast('Preset moved to history', 'success')
         }
       },
+      { destructive: true, confirmLabel: 'Delete' },
     )
   }
 

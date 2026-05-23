@@ -71,7 +71,12 @@ function validateVariableArray(input: unknown, context: string): Variable[] {
     if (value === null) {
       throw new ValidationError('INVALID_INPUT', `${context}: variable at index ${i} has an invalid value`)
     }
-    out.push({ key, value })
+    const variable: Variable = { key, value }
+    // Preserve isSecret flag if explicitly set
+    if (typeof (v as any).isSecret === 'boolean') {
+      variable.isSecret = (v as any).isSecret
+    }
+    out.push(variable)
   }
   return out
 }

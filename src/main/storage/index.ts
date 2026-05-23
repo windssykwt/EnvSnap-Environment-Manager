@@ -1,11 +1,11 @@
 import * as fs from 'fs'
-import * as fsp from 'fs/promises'
 import * as path from 'path'
 import { app } from 'electron'
 import type { DataFile, BackupsFile } from '../../shared/types'
 import { DEFAULT_SETTINGS, APP_NAME } from '../../shared/constants'
 import { logger } from '../logger'
 import { AsyncMutex } from './lock'
+import { isEncryptionAvailable, readFileWithDecryption, atomicEncryptedWrite } from './crypto'
 
 const DATA_FILENAME = 'data.json'
 const BACKUPS_FILENAME = 'backups.json'
@@ -35,11 +35,13 @@ function resolveStorageLocation(): string {
   const defaultPath = path.join(getDefaultStorageLocation(), DATA_FILENAME)
   try {
     if (fs.existsSync(defaultPath)) {
-      const raw = fs.readFileSync(defaultPath, 'utf-8')
-      const data = JSON.parse(raw) as DataFile
-      if (data.settings?.storageLocation) {
-        resolvedStorageLocation = data.settings.storageLocation
-        return resolvedStorageLocation
+      const result = readFileWithDecryption(defaultPath)
+      if (result) {
+        const data = JSON.parse(result.content) as DataFile
+        if (data.settings?.storageLocation) {
+          resolvedStorageLocation = data.settings.storageLocation
+          return resolvedStorageLocation
+        }
       }
     }
   } catch {
@@ -56,39 +58,15 @@ function ensureDirSync(dir: string): void {
 }
 
 /**
- * Atomic write that actually fsyncs. Order is:
- *   1. open tmp file
- *   2. write payload
- *   3. fsync the tmp file's data to disk
- *   4. rename tmp -> target (atomic on the same volume)
- *   5. fsync the parent directory so the rename itself is durable
+ * Atomic encrypted write. Delegates to the crypto module which handles
+ * safeStorage (DPAPI on Windows) encryption and the same fsync+rename
+ * durability pattern as before.
  *
- * Without (3) and (5) a power loss right after rename can leave the
- * target file present but empty.
+ * Falls back to plain-text if encryption is unavailable (graceful
+ * degradation — should not happen on Windows).
  */
 async function atomicWriteAsync(filePath: string, data: string): Promise<void> {
-  const tmpPath = filePath + '.tmp'
-  const fh = await fsp.open(tmpPath, 'w')
-  try {
-    await fh.writeFile(data, 'utf-8')
-    await fh.sync()
-  } finally {
-    await fh.close()
-  }
-  await fsp.rename(tmpPath, filePath)
-
-  // Best-effort dir fsync. Not supported on Windows for directories
-  // (open will fail with EISDIR) so swallow that specific error.
-  try {
-    const dirHandle = await fsp.open(path.dirname(filePath), 'r')
-    try {
-      await dirHandle.sync()
-    } finally {
-      await dirHandle.close()
-    }
-  } catch {
-    // ignore
-  }
+  await atomicEncryptedWrite(filePath, data)
 }
 
 function getDefaultData(): DataFile {
@@ -108,9 +86,18 @@ function loadDataFromDisk(): DataFile {
   const filePath = path.join(resolveStorageLocation(), DATA_FILENAME)
   try {
     ensureDirSync(resolveStorageLocation())
-    if (fs.existsSync(filePath)) {
-      const raw = fs.readFileSync(filePath, 'utf-8')
-      const data = JSON.parse(raw) as DataFile
+    const result = readFileWithDecryption(filePath)
+    if (result) {
+      const data = JSON.parse(result.content) as DataFile
+      // Auto-migrate: if the file was plain-text and encryption is now
+      // available, re-write it encrypted. This happens once on upgrade.
+      if (!result.wasEncrypted && isEncryptionAvailable()) {
+        logger.info('Migrating data.json to encrypted format')
+        const merged = { ...getDefaultData(), ...data, settings: { ...DEFAULT_SETTINGS, ...data.settings } }
+        atomicWriteAsync(filePath, JSON.stringify(merged, null, 2)).catch(err => {
+          logger.error('Failed to migrate data.json to encrypted format', { error: String(err) })
+        })
+      }
       return { ...getDefaultData(), ...data, settings: { ...DEFAULT_SETTINGS, ...data.settings } }
     }
   } catch (err) {
@@ -123,9 +110,18 @@ function loadBackupsFromDisk(): BackupsFile {
   const filePath = path.join(resolveStorageLocation(), BACKUPS_FILENAME)
   try {
     ensureDirSync(resolveStorageLocation())
-    if (fs.existsSync(filePath)) {
-      const raw = fs.readFileSync(filePath, 'utf-8')
-      return { ...getDefaultBackups(), ...JSON.parse(raw) } as BackupsFile
+    const result = readFileWithDecryption(filePath)
+    if (result) {
+      const data = { ...getDefaultBackups(), ...JSON.parse(result.content) } as BackupsFile
+      // Auto-migrate: if the file was plain-text and encryption is now
+      // available, re-write it encrypted.
+      if (!result.wasEncrypted && isEncryptionAvailable()) {
+        logger.info('Migrating backups.json to encrypted format')
+        atomicWriteAsync(filePath, JSON.stringify(data, null, 2)).catch(err => {
+          logger.error('Failed to migrate backups.json to encrypted format', { error: String(err) })
+        })
+      }
+      return data
     }
   } catch (err) {
     logger.error('Failed to read backups file', { error: String(err) })

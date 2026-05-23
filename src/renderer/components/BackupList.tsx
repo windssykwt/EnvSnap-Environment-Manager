@@ -82,6 +82,7 @@ export function BackupList() {
           showToast('Failed to delete entry', 'error')
         }
       },
+      { destructive: true, confirmLabel: 'Delete' },
     )
   }
 
@@ -97,6 +98,7 @@ export function BackupList() {
           showToast('Failed to clear history', 'error')
         }
       },
+      { destructive: true, confirmLabel: 'Delete All' },
     )
   }
 
@@ -216,7 +218,14 @@ export function BackupList() {
           <div className="modal preview-modal" onClick={e => e.stopPropagation()}>
             <div className="preview-modal-header">
               <div>
-                <h3>{previewBackup.presetName}</h3>
+                <h3 className="preview-modal-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M21 8v13H3V8" />
+                    <path d="M1 3h22v5H1z" />
+                    <path d="M10 12h4" />
+                  </svg>
+                  {previewBackup.presetName}
+                </h3>
                 <p className="preview-modal-meta">
                   {kindLabel(previewBackup)} &middot; {new Date(previewBackup.createdAt).toLocaleString()} &middot; {itemCount(previewBackup)} variable{itemCount(previewBackup) === 1 ? '' : 's'}
                 </p>
@@ -226,7 +235,14 @@ export function BackupList() {
             <div className="preview-modal-body">
               {previewBackup.kind === 'preset-archive' ? (
                 previewBackup.variables.length === 0 ? (
-                  <p className="empty-state" style={{ margin: 0 }}>This preset had no variables.</p>
+                  <div className="preview-empty-state">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M21 8v13H3V8" />
+                      <path d="M1 3h22v5H1z" />
+                      <path d="M10 12h4" />
+                    </svg>
+                    <span>This preset had no variables.</span>
+                  </div>
                 ) : (
                   <table className="preview-table">
                     <thead>
@@ -281,7 +297,14 @@ export function BackupList() {
                   </table>
                 )
               ) : previewBackup.snapshot.length === 0 ? (
-                <p className="empty-state" style={{ margin: 0 }}>No variables were captured.</p>
+                <div className="preview-empty-state">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M21 8v13H3V8" />
+                    <path d="M1 3h22v5H1z" />
+                    <path d="M10 12h4" />
+                  </svg>
+                  <span>No variables were captured.</span>
+                </div>
               ) : (
                 <table className="preview-table">
                   <thead>
