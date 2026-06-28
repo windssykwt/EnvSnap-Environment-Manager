@@ -3,14 +3,6 @@ import { logger } from './logger'
 
 const STARTUP_HIDDEN_ARG = '--hidden'
 
-function getStartupOptions(enabled: boolean): Electron.Settings {
-  return {
-    openAtLogin: enabled,
-    path: app.getPath('exe'),
-    args: [STARTUP_HIDDEN_ARG],
-  }
-}
-
 export function isStartupHiddenLaunch(): boolean {
   return process.argv.includes(STARTUP_HIDDEN_ARG)
 }
@@ -18,39 +10,47 @@ export function isStartupHiddenLaunch(): boolean {
 /**
  * Register or unregister the app to launch at Windows login.
  *
- * In a packaged build this points Windows at the installed exe, which
- * is stable. In dev mode the "exe" is the local copy of electron.exe
- * inside `node_modules`, which disappears as soon as you reinstall or
- * move the project, leaving a broken Run-key entry behind. We refuse
- * to register in dev for that reason and surface the choice clearly
- * in the log so the user knows their toggle was ignored.
+ * Uses Electron's setLoginItemSettings which writes to the Windows
+ * Registry Run key (HKCU\Software\Microsoft\Windows\CurrentVersion\Run).
+ *
+ * For portable builds, this points at wherever the exe currently lives.
+ * If the user moves the exe, they'll need to toggle the setting again.
  */
 export function setLaunchOnStartup(enabled: boolean): void {
   if (!app.isPackaged) {
     logger.warn('Launch on startup is disabled in development builds', {
       requested: String(enabled),
     })
-    // Best-effort: if a previous packaged install ever wrote a Run-key
-    // entry pointing at this dev path, clear it so we don't leave the
-    // user in a broken state.
     if (!enabled) {
       app.setLoginItemSettings({ openAtLogin: false })
     }
     return
   }
-  app.setLoginItemSettings(getStartupOptions(enabled))
-  logger.info('Launch on startup updated', { enabled: String(enabled) })
+
+  try {
+    app.setLoginItemSettings({
+      openAtLogin: enabled,
+      path: app.getPath('exe'),
+      args: enabled ? [STARTUP_HIDDEN_ARG] : [],
+    })
+    logger.info('Launch on startup updated', { enabled: String(enabled), path: app.getPath('exe') })
+  } catch (err) {
+    logger.error('Failed to set launch on startup', { error: String(err) })
+  }
 }
 
 /**
  * Reconcile Windows' current login item state with the user's saved
- * preference. No-ops in dev so we don't keep "fixing" a setting that
- * we deliberately don't honour outside packaged builds.
+ * preference. No-ops in dev.
  */
 export function syncLaunchOnStartupSetting(enabled: boolean): void {
   if (!app.isPackaged) return
-  const current = app.getLoginItemSettings(getStartupOptions(enabled))
-  if (current.openAtLogin !== enabled) {
-    setLaunchOnStartup(enabled)
+  try {
+    const current = app.getLoginItemSettings({ path: app.getPath('exe') })
+    if (current.openAtLogin !== enabled) {
+      setLaunchOnStartup(enabled)
+    }
+  } catch (err) {
+    logger.error('Failed to sync launch on startup setting', { error: String(err) })
   }
 }

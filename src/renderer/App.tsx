@@ -8,6 +8,7 @@ import { BackupsPage } from './pages/BackupsPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { usePresetActivated } from './hooks/useEnvApi'
 import { useTheme } from './hooks/useTheme'
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 
 export default function App() {
   const currentPage = useAppStore(s => s.currentPage)
@@ -15,9 +16,10 @@ export default function App() {
   // Apply theme (light/dark/system) to document root
   useTheme()
 
-  // Listen for activation events from the main process (tray clicks). They
-  // change the active preset, so reload the preset list to refresh the
-  // sidebar's active highlight.
+  // Register global keyboard shortcuts
+  useKeyboardShortcuts()
+
+  // Listen for activation events from the main process (tray clicks).
   usePresetActivated(() => {
     const store = useAppStore.getState()
     store.loadPresets()

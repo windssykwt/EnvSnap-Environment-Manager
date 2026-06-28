@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import type { KeyboardEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import type { KeyboardEvent, DragEvent } from 'react'
 import type { Variable } from '../../shared/types'
 import { isValidEnvKey } from '../lib/validation'
+import { v4 as uuidv4 } from 'uuid'
 
 interface VariableTableProps {
   variables: Variable[]
@@ -9,8 +10,18 @@ interface VariableTableProps {
   readOnly?: boolean
 }
 
+/** Ensure every variable has a stable _uid for React key tracking. */
+function ensureUids(vars: Variable[]): Variable[] {
+  let changed = false
+  const result = vars.map(v => {
+    if (v._uid) return v
+    changed = true
+    return { ...v, _uid: uuidv4() }
+  })
+  return changed ? result : vars
+}
+
 // Names containing any of these tokens will be auto-detected as sensitive
-// when isSecret is not explicitly set. Users can override per-row.
 const SENSITIVE_TOKENS = ['SECRET', 'TOKEN', 'PASSWORD', 'PASSWD', 'API_KEY', 'APIKEY', 'PRIVATE_KEY', 'CREDENTIAL']
 
 function looksSensitive(key: string): boolean {
@@ -19,7 +30,6 @@ function looksSensitive(key: string): boolean {
   return SENSITIVE_TOKENS.some(t => upper.includes(t))
 }
 
-/** Determine if a variable should be masked based on isSecret flag or name heuristic. */
 function shouldMask(v: Variable): boolean {
   if (v.isSecret !== undefined) return v.isSecret
   return looksSensitive(v.key)
@@ -30,13 +40,25 @@ function isDuplicateKey(key: string, index: number, all: Variable[]): boolean {
   return all.some((v, i) => i !== index && v.key.trim().toLowerCase() === key.trim().toLowerCase())
 }
 
-export function VariableTable({ variables, onChange, readOnly }: VariableTableProps) {
-  const [revealed, setRevealed] = useState<Record<number, boolean>>({})
+export function VariableTable({ variables: rawVariables, onChange, readOnly }: VariableTableProps) {
+  const variables = useMemo(() => ensureUids(rawVariables), [rawVariables])
+
+  useEffect(() => {
+    if (variables !== rawVariables) {
+      onChange(variables)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({})
   const [filter, setFilter] = useState('')
   const lastKeyInputRef = useRef<HTMLInputElement | null>(null)
   const justAddedRef = useRef(false)
 
-  // Autofocus the new row's key input after add.
+  // Drag-and-drop state
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+
   useEffect(() => {
     if (justAddedRef.current && lastKeyInputRef.current) {
       lastKeyInputRef.current.focus()
@@ -46,7 +68,7 @@ export function VariableTable({ variables, onChange, readOnly }: VariableTablePr
 
   const handleAdd = () => {
     justAddedRef.current = true
-    onChange([...variables, { key: '', value: '', isSecret: false }])
+    onChange([...variables, { key: '', value: '', isSecret: false, _uid: uuidv4() }])
   }
 
   const handleUpdate = (index: number, field: 'key' | 'value', val: string) => {
@@ -56,46 +78,77 @@ export function VariableTable({ variables, onChange, readOnly }: VariableTablePr
   const handleToggleSecret = (index: number) => {
     onChange(variables.map((v, i) => {
       if (i !== index) return v
-      // Toggle isSecret. If it was undefined (auto-detected), explicitly set it.
       const currentlySecret = shouldMask(v)
       return { ...v, isSecret: !currentlySecret }
     }))
   }
 
   const handleDelete = (index: number) => {
+    const uid = variables[index]._uid!
     onChange(variables.filter((_, i) => i !== index))
     setRevealed(prev => {
-      const next: Record<number, boolean> = {}
-      Object.entries(prev).forEach(([k, v]) => {
-        const i = Number(k)
-        if (i < index) next[i] = v
-        else if (i > index) next[i - 1] = v
-      })
+      const next = { ...prev }
+      delete next[uid]
       return next
     })
   }
 
-  const toggleReveal = (index: number) => {
-    setRevealed(prev => ({ ...prev, [index]: !prev[index] }))
+  const toggleReveal = (uid: string) => {
+    setRevealed(prev => ({ ...prev, [uid]: !prev[uid] }))
   }
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>, index: number, field: 'key' | 'value') => {
     if (e.key === 'Enter') {
       e.preventDefault()
       if (field === 'key') {
-        // Move from key to value on the same row.
         const valueInput = (e.currentTarget.parentElement?.querySelector('[data-field="value"]') as HTMLInputElement | null)
         valueInput?.focus()
         return
       }
-      // Enter on value: append a new row if we're on the last one.
       if (index === variables.length - 1) {
         handleAdd()
       }
     }
   }
 
-  // Compute per-row issues once for the whole list.
+  // --- Drag and Drop ---
+  const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>, index: number) => {
+    setDragIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', String(index))
+    if (e.currentTarget) {
+      e.currentTarget.style.opacity = '0.5'
+    }
+  }, [])
+
+  const handleDragEnd = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.currentTarget.style.opacity = '1'
+    setDragIndex(null)
+    setDragOverIndex(null)
+  }, [])
+
+  const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>, index: number) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverIndex(index)
+  }, [])
+
+  const handleDrop = useCallback((e: DragEvent<HTMLDivElement>, dropIndex: number) => {
+    e.preventDefault()
+    if (dragIndex === null || dragIndex === dropIndex) {
+      setDragIndex(null)
+      setDragOverIndex(null)
+      return
+    }
+    const newVars = [...variables]
+    const [moved] = newVars.splice(dragIndex, 1)
+    newVars.splice(dropIndex, 0, moved)
+    onChange(newVars)
+    setDragIndex(null)
+    setDragOverIndex(null)
+  }, [dragIndex, variables, onChange])
+
+  // Compute per-row issues
   const rowIssues = useMemo(() => {
     return variables.map((v, i) => {
       const trimmed = v.key.trim()
@@ -108,8 +161,6 @@ export function VariableTable({ variables, onChange, readOnly }: VariableTablePr
 
   const invalidCount = rowIssues.filter(Boolean).length
 
-  // Filter applies to the displayed slice, but we keep the underlying index
-  // so edits/deletes hit the right element.
   const visible = useMemo(() => {
     const q = filter.trim().toLowerCase()
     if (!q) return variables.map((v, i) => ({ v, i }))
@@ -117,6 +168,8 @@ export function VariableTable({ variables, onChange, readOnly }: VariableTablePr
       .map((v, i) => ({ v, i }))
       .filter(({ v }) => v.key.toLowerCase().includes(q) || v.value.toLowerCase().includes(q))
   }, [variables, filter])
+
+  const isFiltering = filter.trim().length > 0
 
   return (
     <section className="vt" aria-label="Environment variables">
@@ -150,15 +203,17 @@ export function VariableTable({ variables, onChange, readOnly }: VariableTablePr
             Add a key and value, then press Activate to apply this preset to Windows.
           </div>
           {!readOnly && (
-            <button className="btn btn-primary" onClick={handleAdd}>
+            <button className="btn vt-add-first" onClick={handleAdd}>
+              <span className="vt-add-plus">+</span>
               Add your first variable
             </button>
           )}
         </div>
       ) : (
         <>
-          <div className="vt-grid" role="table">
+          <div className={`vt-grid${!readOnly && !isFiltering ? ' vt-grid-draggable' : ''}`} role="table">
             <div className="vt-row vt-head" role="row">
+              {!readOnly && !isFiltering && <span role="columnheader" aria-label="Drag handle" />}
               <span role="columnheader">Name</span>
               <span role="columnheader">Value</span>
               <span role="columnheader" aria-label="Actions" />
@@ -171,16 +226,38 @@ export function VariableTable({ variables, onChange, readOnly }: VariableTablePr
             {visible.map(({ v, i }) => {
               const issue = rowIssues[i]
               const sensitive = shouldMask(v)
-              const isRevealed = revealed[i] ?? false
+              const uid = v._uid!
+              const isRevealed = revealed[uid] ?? false
               const showAsPassword = sensitive && !isRevealed
               const isLast = i === variables.length - 1
+              const isDragTarget = dragOverIndex === i && dragIndex !== i
 
               return (
                 <div
-                  key={i}
-                  className={`vt-row vt-row-data${issue ? ' is-invalid' : ''}${sensitive ? ' is-secret' : ''}`}
+                  key={uid}
+                  className={`vt-row vt-row-data${issue ? ' is-invalid' : ''}${sensitive ? ' is-secret' : ''}${isDragTarget ? ' is-drag-over' : ''}`}
                   role="row"
+                  onDragOver={e => handleDragOver(e, i)}
+                  onDrop={e => handleDrop(e, i)}
                 >
+                  {!readOnly && !isFiltering && (
+                    <div
+                      className="vt-cell vt-cell-drag"
+                      aria-label="Drag to reorder"
+                      draggable
+                      onDragStart={e => handleDragStart(e, i)}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="vt-drag-handle">
+                        <line x1="8" y1="6" x2="8" y2="6" />
+                        <line x1="16" y1="6" x2="16" y2="6" />
+                        <line x1="8" y1="12" x2="8" y2="12" />
+                        <line x1="16" y1="12" x2="16" y2="12" />
+                        <line x1="8" y1="18" x2="8" y2="18" />
+                        <line x1="16" y1="18" x2="16" y2="18" />
+                      </svg>
+                    </div>
+                  )}
                   <div className="vt-cell vt-cell-key">
                     <input
                       ref={isLast ? lastKeyInputRef : undefined}
@@ -215,7 +292,7 @@ export function VariableTable({ variables, onChange, readOnly }: VariableTablePr
                       <button
                         type="button"
                         className="vt-icon-btn vt-reveal-toggle"
-                        onClick={() => toggleReveal(i)}
+                        onClick={() => toggleReveal(uid)}
                         title={isRevealed ? 'Hide value' : 'Reveal value'}
                         aria-label={isRevealed ? 'Hide value' : 'Reveal value'}
                         tabIndex={-1}

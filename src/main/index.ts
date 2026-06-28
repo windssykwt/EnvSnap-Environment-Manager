@@ -5,6 +5,9 @@ import { createTray } from './tray'
 import { logger } from './logger'
 import { isStartupHiddenLaunch, syncLaunchOnStartupSetting } from './startup'
 import { getSettings } from './storage/settings'
+import { APP_NAME } from '../shared/constants'
+
+app.setAppUserModelId(APP_NAME)
 
 app.whenReady().then(() => {
   logger.info('Application starting')

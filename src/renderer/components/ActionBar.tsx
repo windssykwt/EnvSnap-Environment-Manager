@@ -67,6 +67,8 @@ export function ActionBar({ presetId, onPersist, hasInvalidKeys }: ActionBarProp
     if (newPreset) {
       selectPreset(newPreset.id)
       showToast('Preset duplicated', 'success')
+    } else {
+      showToast('Failed to duplicate preset', 'error')
     }
   }
 
@@ -78,9 +80,28 @@ export function ActionBar({ presetId, onPersist, hasInvalidKeys }: ActionBarProp
       'Delete Preset',
       `Delete "${preset.name}"?${warning} It will move to History where you can restore it later.`,
       async () => {
+        const deletedName = preset.name
         const success = await deletePreset(presetId)
         if (success) {
-          showToast('Preset moved to history', 'success')
+          // Load backups so we can find the one we just created for undo
+          const store = useAppStore.getState()
+          await store.loadBackups()
+          const backups = store.backups
+          // The most recent preset-archive backup with this name is our undo target
+          const undoBackup = backups.find(
+            b => b.kind === 'preset-archive' && b.presetName === deletedName
+          )
+          showToast('Preset moved to history', 'success', {
+            onUndo: undoBackup
+              ? async () => {
+                  const restored = await store.restoreBackup(undoBackup.id)
+                  if (restored) {
+                    store.selectPreset(restored.id)
+                    store.showToast(`"${deletedName}" restored`, 'success')
+                  }
+                }
+              : undefined,
+          })
         }
       },
       { destructive: true, confirmLabel: 'Delete' },

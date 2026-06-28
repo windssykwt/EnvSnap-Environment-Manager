@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { app } from 'electron'
-import type { DataFile, BackupsFile } from '../../shared/types'
+import type { DataFile, BackupsFile, Preset } from '../../shared/types'
 import { DEFAULT_SETTINGS, APP_NAME } from '../../shared/constants'
 import { logger } from '../logger'
 import { AsyncMutex } from './lock'
@@ -78,6 +78,23 @@ function getDefaultData(): DataFile {
   }
 }
 
+/**
+ * Ensure every preset has the fields expected by the current version.
+ * Handles old data files that lack newly-added properties.
+ */
+function normalizePreset(p: Partial<Preset>): Preset {
+  return {
+    id: p.id ?? '',
+    name: p.name ?? '',
+    group: p.group ?? '',
+    position: p.position ?? 0,
+    isPinned: p.isPinned ?? false,
+    variables: p.variables ?? [],
+    createdAt: p.createdAt ?? '',
+    updatedAt: p.updatedAt ?? '',
+  }
+}
+
 function getDefaultBackups(): BackupsFile {
   return { backups: [] }
 }
@@ -98,7 +115,27 @@ function loadDataFromDisk(): DataFile {
           logger.error('Failed to migrate data.json to encrypted format', { error: String(err) })
         })
       }
-      return { ...getDefaultData(), ...data, settings: { ...DEFAULT_SETTINGS, ...data.settings } }
+      // Migrate legacy presets that lack the `position` field: assign
+      // sequential positions within each group preserving file order.
+      const rawPresets = data.presets ?? []
+      const needsMigration = rawPresets.some(p => p.position === undefined || p.position === null)
+      if (needsMigration) {
+        const posMap = new Map<string, number>()
+        data.presets = rawPresets.map(p => {
+          if (p.position === undefined || p.position === null) {
+            const g = p.group ?? ''
+            const pos = (posMap.get(g) ?? -1) + 1
+            posMap.set(g, pos)
+            return { ...p, position: pos }
+          }
+          return p
+        })
+        // Write migrated data back immediately so the next load is clean
+        atomicWriteAsync(filePath, JSON.stringify(data, null, 2)).catch(err => {
+          logger.error('Failed to write migrated data.json', { error: String(err) })
+        })
+      }
+      return { ...getDefaultData(), ...data, presets: (data.presets ?? []).map(normalizePreset), settings: { ...DEFAULT_SETTINGS, ...data.settings } }
     }
   } catch (err) {
     logger.error('Failed to read data file', { error: String(err) })
@@ -148,7 +185,7 @@ export function readDataFile(): DataFile {
   // they mutate them, which the existing code already does.
   return {
     ...dataCache,
-    presets: [...dataCache.presets],
+    presets: dataCache.presets.map(normalizePreset),
     settings: { ...dataCache.settings },
     lastAppliedVariables: dataCache.lastAppliedVariables ? [...dataCache.lastAppliedVariables] : [],
   }
@@ -202,7 +239,7 @@ export function mutateData<T>(
     }
     const snapshot: DataFile = {
       ...dataCache,
-      presets: dataCache.presets.map(p => ({ ...p, variables: p.variables.map(v => ({ ...v })) })),
+      presets: dataCache.presets.map(p => normalizePreset({ ...p, variables: p.variables.map(v => ({ ...v })) })),
       settings: { ...dataCache.settings },
       lastAppliedVariables: dataCache.lastAppliedVariables ? [...dataCache.lastAppliedVariables] : [],
     }

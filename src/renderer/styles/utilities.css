@@ -1,0 +1,64 @@
+/* ====================================================================
+   Utilities — Scrollbar, Error Boundary, Responsive, Shortcuts
+   ==================================================================== */
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+::-webkit-scrollbar-thumb {
+  background: rgba(60, 60, 67, 0.24);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(60, 60, 67, 0.38);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* Error Boundary */
+.error-boundary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  padding: 40px;
+  background: var(--bg);
+}
+
+.error-boundary-content { text-align: center; max-width: 400px; }
+
+.error-boundary-content h2 {
+  font-size: 20px;
+  color: var(--danger);
+  margin-bottom: 12px;
+}
+
+.error-boundary-message {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  word-break: break-word;
+}
+
+/* Keyboard Shortcut Hints */
+.shortcut-hint {
+  font-size: 11px;
+  color: var(--text-faint);
+  opacity: 0.6;
+}
+
+/* Responsive */
+@media (max-width: 760px) {
+  :root { --sidebar-width: 210px; }
+  .topnav-brand { display: none; }
+  .topnav-tabs { flex: 1; }
+  .topnav-tab { flex: 1; padding-inline: 8px; }
+  .detail-panel, .backups-page, .settings-page { padding: 18px; }
+  .variable-table-header, .variable-row, .vt-row { grid-template-columns: 1fr; }
+  .vt-cell-actions { justify-self: end; }
+  .vt-filter { width: 140px; }
+}

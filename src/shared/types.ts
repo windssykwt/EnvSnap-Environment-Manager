@@ -1,4 +1,6 @@
 export interface Variable {
+  /** Stable unique identifier for React key tracking. Generated client-side. */
+  _uid?: string
   key: string
   value: string
   /** When true, the value is treated as sensitive (API key, token, etc.) and masked in the UI. */
@@ -8,9 +10,15 @@ export interface Variable {
 export interface Preset {
   id: string
   name: string
+  /** Empty string means ungrouped. */
+  group: string
+  /** Sort order within group. Lower = higher. Assigned in steps of 1 by reorder. */
+  position: number
   variables: Variable[]
   createdAt: string
   updatedAt: string
+  /** Pinned presets float above all folder groups. */
+  isPinned?: boolean
 }
 
 /**
@@ -90,6 +98,14 @@ export interface AppConfigExport {
   backups: BackupsFile
 }
 
+export interface ProfileExport {
+  version: number
+  appName: string
+  exportedAt: string
+  presets: Preset[]
+  folderNames: string[]
+}
+
 export interface IpcResult<T> {
   success: boolean
   data?: T
@@ -105,5 +121,11 @@ export interface ActivationResult {
   failedVariables: Array<{ key: string; reason: string }>
 }
 
-export type CreatePresetInput = { name: string; variables?: Variable[] }
-export type UpdatePresetInput = { name?: string; variables?: Variable[] }
+export type CreatePresetInput = { name: string; group?: string; variables?: Variable[] }
+export type UpdatePresetInput = { name?: string; group?: string; position?: number; variables?: Variable[]; isPinned?: boolean }
+
+/** A single item in a reorder batch. */
+export interface ReorderItem {
+  id: string
+  position: number
+}

@@ -119,6 +119,7 @@ export function BackupList() {
 
   return (
     <div className="history-page">
+      <div className="history-page-inner">
       <div className="history-header">
         <h2 className="history-title">History</h2>
         {backups.length > 0 && (
@@ -212,6 +213,8 @@ export function BackupList() {
           </tbody>
         </table>
       )}
+
+      </div>{/* history-page-inner */}
 
       {previewBackup && (
         <div className="modal-overlay" onClick={() => setPreviewBackup(null)}>

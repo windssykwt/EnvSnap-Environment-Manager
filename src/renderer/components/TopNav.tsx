@@ -1,4 +1,5 @@
 import { useAppStore } from '../store'
+import { getEnvApi } from '../hooks/useEnvApi'
 import type { Page } from '../store/uiStore'
 
 export function TopNav() {
@@ -32,21 +33,21 @@ export function TopNav() {
         <button
           className="window-btn"
           aria-label="Minimize"
-          onClick={() => (window as any).envApi?.window?.minimize()}
+          onClick={() => getEnvApi()?.window?.minimize()}
         >
           <span className="window-icon window-icon-min">—</span>
         </button>
         <button
           className="window-btn"
           aria-label="Maximize"
-          onClick={() => (window as any).envApi?.window?.maximizeToggle()}
+          onClick={() => getEnvApi()?.window?.maximizeToggle()}
         >
           <span className="window-icon window-icon-max">▢</span>
         </button>
         <button
           className="window-btn window-btn-close"
           aria-label="Close"
-          onClick={() => (window as any).envApi?.window?.close()}
+          onClick={() => getEnvApi()?.window?.close()}
         >
           <span className="window-icon window-icon-close">×</span>
         </button>

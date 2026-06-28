@@ -12,7 +12,7 @@ export interface BackupSlice {
 }
 
 function getApi(): Window['envApi'] | null {
-  return (window as any).envApi ?? null
+  return window.envApi ?? null
 }
 
 export const createBackupSlice: StateCreator<BackupSlice> = (set, get) => ({
@@ -42,6 +42,7 @@ export const createBackupSlice: StateCreator<BackupSlice> = (set, get) => ({
       await combined.loadPresets?.()
       return result.data
     }
+    ;(get() as any).showToast?.(result.error?.message ?? 'Failed to restore preset', 'error')
     return null
   },
 
@@ -56,6 +57,7 @@ export const createBackupSlice: StateCreator<BackupSlice> = (set, get) => ({
       await combined.loadPresets?.()
       return result.data
     }
+    ;(get() as any).showToast?.(result.error?.message ?? 'Failed to restore previous environment state', 'error')
     return null
   },
 

@@ -9,7 +9,7 @@ export interface SettingsSlice {
 }
 
 function getApi(): Window['envApi'] | null {
-  return (window as any).envApi ?? null
+  return window.envApi ?? null
 }
 
 export const createSettingsSlice: StateCreator<SettingsSlice> = (set) => ({

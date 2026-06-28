@@ -1,4 +1,4 @@
-import type { Variable, CreatePresetInput, UpdatePresetInput } from '../shared/types'
+import type { Variable, CreatePresetInput, UpdatePresetInput, ReorderItem } from '../shared/types'
 import { ENV_KEY_REGEX } from '../shared/constants'
 
 /**
@@ -92,7 +92,15 @@ export function validateCreatePresetInput(input: unknown): CreatePresetInput {
   const variables = input.variables === undefined
     ? []
     : validateVariableArray(input.variables, 'create')
-  return { name, variables }
+  const out: CreatePresetInput = { name, variables }
+  if (input.group !== undefined) {
+    const group = sanitizeString(input.group, LIMITS.PRESET_NAME_MAX)
+    if (group === null) {
+      throw new ValidationError('INVALID_INPUT', 'Group name must be a string (max 100 chars)')
+    }
+    out.group = group
+  }
+  return out
 }
 
 export function validateUpdatePresetInput(input: unknown): UpdatePresetInput {
@@ -110,12 +118,34 @@ export function validateUpdatePresetInput(input: unknown): UpdatePresetInput {
   if (input.variables !== undefined) {
     out.variables = validateVariableArray(input.variables, 'update')
   }
+  if (input.group !== undefined) {
+    const group = sanitizeString(input.group, LIMITS.PRESET_NAME_MAX)
+    if (group === null) {
+      throw new ValidationError('INVALID_INPUT', 'Group name must be a string (max 100 chars)')
+    }
+    out.group = group
+  }
+  if (input.position !== undefined) {
+    if (typeof input.position !== 'number' || !Number.isInteger(input.position) || input.position < 0) {
+      throw new ValidationError('INVALID_INPUT', 'Position must be a non-negative integer')
+    }
+    out.position = input.position
+  }
+  if (input.isPinned !== undefined) {
+    if (typeof input.isPinned !== 'boolean') {
+      throw new ValidationError('INVALID_INPUT', 'isPinned must be a boolean')
+    }
+    out.isPinned = input.isPinned
+  }
   return out
 }
 
 export interface ValidatedImportPreset {
   name: string
   variables: Variable[]
+  group?: string
+  position?: number
+  isPinned?: boolean
 }
 
 export interface ImportPresetsResult {
@@ -278,6 +308,27 @@ export function validateId(id: unknown): string {
   return id
 }
 
+/** Validate a reorder payload — array of {id, position}. */
+export function validateReorderItems(items: unknown): ReorderItem[] {
+  if (!Array.isArray(items)) {
+    throw new ValidationError('INVALID_INPUT', 'Reorder items must be an array')
+  }
+  if (items.length === 0) {
+    throw new ValidationError('INVALID_INPUT', 'Reorder items must not be empty')
+  }
+  return items.map((item, i) => {
+    if (!isPlainObject(item)) {
+      throw new ValidationError('INVALID_INPUT', `Reorder item at index ${i} must be an object`)
+    }
+    const id = validateId((item as any).id)
+    const pos = (item as any).position
+    if (typeof pos !== 'number' || !Number.isInteger(pos) || pos < 0) {
+      throw new ValidationError('INVALID_INPUT', `Reorder item at index ${i} has invalid position`)
+    }
+    return { id, position: pos }
+  })
+}
+
 /** Validate that a string array of ids contains only well-formed ids. */
 export function validateIdArray(ids: unknown): string[] {
   if (!Array.isArray(ids)) {
@@ -363,4 +414,55 @@ export async function readImportFileBounded(filePath: string): Promise<string> {
     )
   }
   return fsp.readFile(filePath, 'utf-8')
+}
+
+/**
+ * Validate a profile export file. Returns sanitized presets + folderNames.
+ */
+export function validateProfileImport(parsed: unknown): {
+  presets: ValidatedImportPreset[]
+  folderNames: string[]
+} {
+  if (!isPlainObject(parsed)) {
+    throw new ValidationError('INVALID_FORMAT', 'Profile file must be a JSON object')
+  }
+  const version = parsed.version
+  if (version !== 1) {
+    throw new ValidationError('INVALID_FORMAT', 'Unsupported profile version')
+  }
+  const folderNames: string[] = []
+  const folderRaw = parsed.folderNames
+  if (Array.isArray(folderRaw)) {
+    for (const f of folderRaw) {
+      const name = sanitizeString(f, LIMITS.PRESET_NAME_MAX)
+      if (name !== null && name.trim() !== '' && !folderNames.includes(name)) {
+        folderNames.push(name)
+      }
+    }
+  }
+
+  const presetsList: ValidatedImportPreset[] = []
+  const presetsRaw = parsed.presets
+  if (Array.isArray(presetsRaw)) {
+    if (presetsRaw.length > LIMITS.PRESETS_TOTAL_MAX) {
+      throw new ValidationError('INVALID_FORMAT', 'Too many presets in profile file')
+    }
+    for (const p of presetsRaw) {
+      if (!isPlainObject(p)) continue
+      const name = sanitizeString(p.name, LIMITS.PRESET_NAME_MAX)
+      if (name === null || name.trim() === '') continue
+      if (!Array.isArray(p.variables)) continue
+      try {
+        const vars = validateVariableArray(p.variables, `preset "${name}"`)
+        const group = sanitizeString(p.group, LIMITS.PRESET_NAME_MAX) ?? ''
+        const position = typeof p.position === 'number' && Number.isInteger(p.position) && p.position >= 0 ? p.position : 0
+        const isPinned = p.isPinned === true
+        presetsList.push({ name, variables: vars, group, position, isPinned })
+      } catch {
+        // skip malformed preset
+      }
+    }
+  }
+
+  return { presets: presetsList, folderNames }
 }

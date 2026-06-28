@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useAppStore } from '../store'
+import { getEnvApi } from '../hooks/useEnvApi'
 import { Sidebar } from '../components/Sidebar'
 import { VariableTable } from '../components/VariableTable'
 import type { Variable } from '../../shared/types'
@@ -14,7 +15,10 @@ export function PresetsPage() {
   const activePresetId = useAppStore(s => s.activePresetId)
   const loadPresets = useAppStore(s => s.loadPresets)
   const updatePreset = useAppStore(s => s.updatePreset)
+  const activatePreset = useAppStore(s => s.activatePreset)
   const showToast = useAppStore(s => s.showToast)
+  const settings = useAppStore(s => s.settings)
+  const showConfirm = useAppStore(s => s.showConfirm)
 
   const initial = presets.find(p => p.id === selectedPresetId)
   const [localVariables, setLocalVariables] = useState<Variable[]>(initial?.variables ?? [])
@@ -24,7 +28,6 @@ export function PresetsPage() {
   const loadedPresetIdRef = useRef<string | null>(selectedPresetId)
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Refs to always have latest values in the auto-save callback
   const presetNameRef = useRef(presetName)
   const localVariablesRef = useRef(localVariables)
   const selectedPresetIdRef = useRef(selectedPresetId)
@@ -36,14 +39,12 @@ export function PresetsPage() {
     loadPresets()
   }, [])
 
-  // Cleanup auto-save timer on unmount
   useEffect(() => {
     return () => {
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
     }
   }, [])
 
-  // Auto-save: debounced persist whenever dirty flag is set
   const scheduleAutoSave = useCallback(() => {
     if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
     autoSaveTimerRef.current = setTimeout(async () => {
@@ -113,11 +114,70 @@ export function PresetsPage() {
     return Boolean(result)
   }
 
+  // Listen for Ctrl+S (force save)
+  useEffect(() => {
+    const handler = () => {
+      void persistPreset()
+    }
+    window.addEventListener('envsnap:force-save', handler)
+    return () => window.removeEventListener('envsnap:force-save', handler)
+  })
+
+  // Listen for quick-create (from empty state CTA)
+  useEffect(() => {
+    const handler = () => {
+      const store = useAppStore.getState()
+      store.setCurrentPage('presets')
+      const name = `Preset ${store.presets.length + 1}`
+      store.createPreset(name).then(preset => {
+        if (preset) store.selectPreset(preset.id)
+      })
+    }
+    window.addEventListener('envsnap:quick-create', handler)
+    return () => window.removeEventListener('envsnap:quick-create', handler)
+  })
+
+  // Listen for Ctrl+Shift+A (activate)
+  useEffect(() => {
+    const handler = async () => {
+      if (!selectedPresetIdRef.current) return
+      const hasInvalid = localVariablesRef.current.some(v => !isValidEnvKey(v.key))
+      if (hasInvalid) {
+        showToast('Fix invalid variable names before activating', 'error')
+        return
+      }
+      const saved = await persistPreset()
+      if (!saved) return
+      const preset = presets.find(p => p.id === selectedPresetIdRef.current)
+      if (!preset) return
+
+      const doActivate = async () => {
+        const result = await activatePreset(selectedPresetIdRef.current!)
+        if (result?.success) {
+          showToast(`Preset "${preset.name}" applied to Windows`, 'success')
+        } else {
+          showToast(result?.error?.message ?? 'Failed to activate preset', 'error')
+        }
+      }
+
+      if (settings.confirmBeforeApply) {
+        showConfirm(
+          'Activate Preset',
+          `Apply "${preset.name}" to Windows User Environment Variables? Existing values for these variables will be overwritten.`,
+          doActivate,
+        )
+      } else {
+        await doActivate()
+      }
+    }
+    window.addEventListener('envsnap:activate', handler)
+    return () => window.removeEventListener('envsnap:activate', handler)
+  })
+
   const handleExportThis = async () => {
     if (!selectedPresetId) return
-    const api = (window as any).envApi
+    const api = getEnvApi()
     if (!api?.importExport?.exportOne) return
-    // Persist any in-flight edits first so the file matches what's on screen.
     await persistPreset()
     const result = await api.importExport.exportOne(selectedPresetId)
     if (result.success) {
@@ -131,9 +191,8 @@ export function PresetsPage() {
 
   const handleImportMerge = async () => {
     if (!selectedPresetId) return
-    const api = (window as any).envApi
+    const api = getEnvApi()
     if (!api?.importExport?.importMerge) return
-    // Save current edits before merging so they aren't lost when we reload.
     await persistPreset()
     const result = await api.importExport.importMerge(selectedPresetId)
     if (result.success) {
@@ -146,10 +205,17 @@ export function PresetsPage() {
         if (updated) parts.push(`${updated} updated`)
         showToast(`Merged into "${presetName}" (${parts.join(', ')})`, 'success')
       }
-      // Force a reload of the editor from the freshly merged preset.
-      loadedPresetIdRef.current = null
-      setIsDirty(false)
+      // Reload presets from main process, then refresh local editor state
       await loadPresets()
+      // Force reload local variables from the freshly updated preset
+      const freshPresets = useAppStore.getState().presets
+      const freshPreset = freshPresets.find(p => p.id === selectedPresetId)
+      if (freshPreset) {
+        setLocalVariables(freshPreset.variables.map(v => ({ ...v })))
+        setPresetName(freshPreset.name)
+      }
+      loadedPresetIdRef.current = selectedPresetId
+      setIsDirty(false)
     } else {
       showToast(result.error?.message ?? 'Failed to import variables', 'error')
     }
@@ -200,9 +266,15 @@ export function PresetsPage() {
               </div>
               <span
                 className={`save-indicator${isDirty ? ' is-dirty' : ' is-saved'}`}
-                title={isDirty ? 'Unsaved changes' : 'All changes saved'}
-                aria-label={isDirty ? 'Unsaved changes' : 'All changes saved'}
-              />
+                title={isDirty ? 'Unsaved changes (Ctrl+S to force save)' : 'Saved'}
+                aria-label={isDirty ? 'Unsaved changes' : 'Saved'}
+              >
+                {!isDirty && (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </span>
               {isActive && (
                 <span className="active-pill" title="This preset is currently applied to Windows">
                   <span className="active-pill-dot" aria-hidden="true" />
@@ -221,8 +293,16 @@ export function PresetsPage() {
             />
           </>
         ) : (
-          <div className="empty-state" style={{ textAlign: 'center', opacity: 0.5 }}>
-            <p>Select or create a preset to get started</p>
+          <div className="empty-state">
+            <div className="empty-state-body">
+              <h2 className="empty-state-title">No preset selected</h2>
+              <p className="empty-state-sub">
+                Select a preset from the sidebar or create one to get started.
+              </p>
+              <span className="empty-state-hint">
+                <kbd>Ctrl</kbd> + <kbd>N</kbd>
+              </span>
+            </div>
           </div>
         )}
       </main>

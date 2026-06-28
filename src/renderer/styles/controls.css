@@ -1,0 +1,263 @@
+/* ====================================================================
+   Controls — Buttons, Action Bar, Active Pill, Save Indicator
+   ==================================================================== */
+
+/* Buttons */
+.btn {
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  border: 1px solid rgba(60, 60, 67, 0.12);
+  padding: 8px 15px;
+  border-radius: 9px;
+  transition: transform 0.12s ease, background 0.14s ease, border-color 0.14s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn:hover:not(:disabled) { transform: none; }
+.btn:active:not(:disabled) { transform: none; }
+
+.btn:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+.btn-primary {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent-soft);
+}
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+
+[data-theme="light"] .btn-primary {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #ffffff !important;
+}
+[data-theme="light"] .btn-primary:hover { background: var(--accent-hover) !important; }
+
+.btn-accent {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent-soft);
+}
+.btn-accent:hover:not(:disabled) { background: var(--accent-hover); }
+
+.btn-destructive {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: rgba(220, 38, 38, 0.4);
+}
+.btn-destructive:hover:not(:disabled) { background: #ef4444; }
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: white !important;
+  border: 1px solid var(--border) !important;
+  outline: none !important;
+}
+.btn-secondary:hover { background: rgba(255, 255, 255, 0.1) !important; }
+.btn-secondary:focus,
+.btn-secondary:active {
+  background: rgba(255, 255, 255, 0.15) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="light"] .btn-secondary {
+  background: #ffffff !important;
+  color: var(--text) !important;
+  border-color: var(--border-strong) !important;
+}
+[data-theme="light"] .btn-secondary:hover {
+  background: #f5f8f6 !important;
+  border-color: var(--accent) !important;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: white;
+}
+.btn-outline:hover { background: rgba(255, 255, 255, 0.05); }
+
+.btn-danger-outline {
+  background: transparent;
+  border: 1px solid rgba(207, 34, 46, 0.4) !important;
+  color: #ff6b73;
+  box-shadow: none !important;
+}
+.btn-danger-outline:hover:not(:disabled) {
+  background: rgba(207, 34, 46, 0.08);
+  border-color: rgba(207, 34, 46, 0.6) !important;
+  color: #ff8a91;
+  box-shadow: none !important;
+}
+
+[data-theme="light"] .btn-danger-outline {
+  color: var(--danger) !important;
+  border-color: rgba(207, 34, 46, 0.35) !important;
+  background: transparent !important;
+}
+[data-theme="light"] .btn-danger-outline:hover { background: rgba(207, 34, 46, 0.06) !important; }
+
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--border-strong);
+}
+
+.btn-icon {
+  font-size: 12px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Action Bar */
+.action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+[data-theme="light"] .action-bar { border-color: var(--border) !important; }
+
+.action-bar-primary,
+.action-bar-secondary {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.action-bar-secondary .btn-secondary {
+  background: transparent !important;
+  border: 1px solid var(--border-strong) !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+}
+
+.action-bar-secondary .btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: var(--text-faint) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="light"] .action-bar-secondary .btn-secondary {
+  background: transparent !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text) !important;
+}
+[data-theme="light"] .action-bar-secondary .btn-secondary:hover:not(:disabled) {
+  background: rgba(45, 75, 58, 0.04) !important;
+  border-color: var(--text-faint) !important;
+}
+
+.btn-activate {
+  background: var(--accent);
+  color: #ffffff;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+.btn-activate:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+.btn-activate:disabled {
+  background: rgba(63, 155, 108, 0.3);
+  border-color: var(--border) !important;
+  cursor: not-allowed;
+}
+
+.btn-deactivate {
+  background: transparent;
+  color: #ff6b73;
+  border: 1px solid rgba(207, 34, 46, 0.4) !important;
+  box-shadow: none !important;
+}
+.btn-deactivate:hover:not(:disabled) {
+  background: rgba(207, 34, 46, 0.08);
+  border-color: rgba(207, 34, 46, 0.6) !important;
+  color: #ff8a91;
+  box-shadow: none !important;
+}
+.btn-deactivate:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Active Pill */
+.active-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  border: 1px solid rgba(63, 155, 108, 0.45);
+  color: #5fc88e;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.active-pill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-hover);
+  box-shadow: 0 0 0 0 rgba(79, 183, 126, 0.6);
+  animation: active-pulse 2s ease-out infinite;
+}
+
+@keyframes active-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(79, 183, 126, 0.6); }
+  70% { box-shadow: 0 0 0 6px rgba(79, 183, 126, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(79, 183, 126, 0); }
+}
+
+[data-theme="light"] .active-pill {
+  background: rgba(63, 155, 108, 0.1) !important;
+  color: var(--accent) !important;
+}
+
+/* Save Indicator */
+.save-indicator {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.save-indicator.is-dirty {
+  width: 10px;
+  height: 10px;
+  background: #f0b85c;
+  box-shadow: 0 0 6px rgba(240, 184, 92, 0.5);
+}
+
+.save-indicator.is-saved {
+  background: none;
+  box-shadow: none;
+  color: #3fb950;
+}

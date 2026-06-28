@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
 import type { Backup, PresetArchiveBackup, PreActivationBackup, Preset, SnapshotEntry } from '../../shared/types'
+import { MAX_BACKUP_ENTRIES } from '../../shared/constants'
 import { readBackupsFile, mutateBackups } from './index'
 
 function isValidBackup(entry: unknown): entry is Backup {
@@ -42,6 +43,7 @@ export function getBackup(id: string): Backup | undefined {
 /**
  * Archive a preset to history before it is deleted. The archived entry holds
  * the full variable snapshot so the user can restore it as a new preset later.
+ * Automatically prunes old entries beyond MAX_BACKUP_ENTRIES.
  */
 export function archivePreset(preset: Preset): Promise<PresetArchiveBackup> {
   const backup: PresetArchiveBackup = {
@@ -54,8 +56,11 @@ export function archivePreset(preset: Preset): Promise<PresetArchiveBackup> {
   }
   return mutateBackups(file => {
     const cleaned = file.backups.filter(isValidBackup)
+    const all = [backup, ...cleaned]
+    // Prune oldest entries if we exceed the limit
+    const trimmed = all.length > MAX_BACKUP_ENTRIES ? all.slice(0, MAX_BACKUP_ENTRIES) : all
     return {
-      next: { backups: [backup, ...cleaned] },
+      next: { backups: trimmed },
       result: backup,
     }
   })
@@ -64,6 +69,7 @@ export function archivePreset(preset: Preset): Promise<PresetArchiveBackup> {
 /**
  * Capture the current Windows env var state for a set of keys, creating a
  * pre-activation snapshot that lets the user roll back the activation.
+ * Automatically prunes old entries beyond MAX_BACKUP_ENTRIES.
  */
 export function createPreActivationBackup(
   presetId: string,
@@ -84,8 +90,11 @@ export function createPreActivationBackup(
   }
   return mutateBackups(file => {
     const cleaned = file.backups.filter(isValidBackup)
+    const all = [backup, ...cleaned]
+    // Prune oldest entries if we exceed the limit
+    const trimmed = all.length > MAX_BACKUP_ENTRIES ? all.slice(0, MAX_BACKUP_ENTRIES) : all
     return {
-      next: { backups: [backup, ...cleaned] },
+      next: { backups: trimmed },
       result: backup,
     }
   })

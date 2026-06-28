@@ -1,0 +1,105 @@
+/* ====================================================================
+   Design Tokens & Variables
+   ==================================================================== */
+
+:root {
+  --bg: #121e18;
+  --bg-surface: rgba(20, 32, 26, 0.75);
+  --bg-sidebar: rgba(17, 28, 22, 0.85);
+  --bg-elevated: rgba(26, 40, 32, 0.8);
+  --bg-control: rgba(38, 56, 46, 0.5);
+  --text: #9faba2;
+  --text-muted: #9faba2;
+  --text-faint: #9faba2;
+  --accent: #3f9b6c;
+  --accent-hover: #4fb77e;
+  --accent-soft: rgba(63, 155, 108, 0.2);
+  --danger: #cf222e;
+  --danger-hover: #e32b38;
+  --warning: #f29339;
+  --success: #238636;
+  --border: rgba(210, 235, 220, 0.14);
+  --border-strong: rgba(210, 235, 220, 0.28);
+  --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.4);
+  --sidebar-width: 320px;
+  --topnav-height: 80px;
+  --radius: 12px;
+  --radius-lg: 20px;
+}
+
+/* Light Theme — green tea accent, off-white background */
+[data-theme="light"] {
+  --bg: #f4f7f5;
+  --bg-surface: rgba(255, 255, 255, 0.85);
+  --bg-sidebar: rgba(248, 251, 249, 0.95);
+  --bg-elevated: rgba(255, 255, 255, 0.95);
+  --bg-control: rgba(230, 240, 234, 0.6);
+  --text: #2c3e35;
+  --text-muted: #5a6e63;
+  --text-faint: #8a9b91;
+  --accent: #3f9b6c;
+  --accent-hover: #35865d;
+  --accent-soft: rgba(63, 155, 108, 0.12);
+  --danger: #cf222e;
+  --danger-hover: #b31d28;
+  --warning: #d97706;
+  --success: #1a7f2e;
+  --border: rgba(45, 75, 58, 0.12);
+  --border-strong: rgba(45, 75, 58, 0.22);
+  --shadow-sm: 0 2px 8px rgba(45, 75, 58, 0.08);
+  --shadow-md: 0 8px 24px rgba(45, 75, 58, 0.12);
+}
+
+/* ====================================================================
+   Reset & Base
+   ==================================================================== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+  background: radial-gradient(circle at 50% 50%, #1a2a22 0%, #0b120e 100%);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+[data-theme="light"] body {
+  background: linear-gradient(135deg, #f0f5f2 0%, #e8f0eb 100%);
+  color: var(--text);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+#root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+input {
+  outline: none !important;
+}
+
+/* Force override for any system/browser focus rings */
+:focus {
+  outline: none !important;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff;
+  -webkit-box-shadow: 0 0 0px 1000px #1a1a2e inset;
+  transition: background-color 5000s ease-in-out 0s;
+}

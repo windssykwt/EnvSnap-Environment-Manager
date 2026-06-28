@@ -1,0 +1,815 @@
+/* ====================================================================
+   Sidebar — Header, Items, Folders, Search, Context Menu, Drag
+   ==================================================================== */
+
+/* ------------------------------------------------------------------ */
+/*  Sidebar Header                                                     */
+/* ------------------------------------------------------------------ */
+
+.sidebar-header {
+  padding: 16px 16px 12px;
+}
+
+.sidebar-header h2 {
+  display: none;
+}
+
+.sidebar-header-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.sidebar-header-actions .btn-create-large {
+  flex: 1;
+  min-width: 0;
+}
+
+.btn-create-folder {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  padding: 10px 12px !important;
+  min-width: 0;
+}
+
+.btn-create-large {
+  width: 100%;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: transparent;
+  border: 1.5px dashed rgba(160, 180, 255, 0.45);
+  border-radius: 10px;
+  color: #c0d0ff;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.btn-create-large:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  border-style: dashed;
+  color: #ffffff;
+}
+
+[data-theme="light"] .btn-create-large {
+  background: rgba(63, 155, 108, 0.1) !important;
+  border-color: rgba(63, 155, 108, 0.3) !important;
+  color: var(--accent) !important;
+}
+
+[data-theme="light"] .btn-create-large:hover {
+  background: rgba(63, 155, 108, 0.18) !important;
+  border-color: rgba(63, 155, 108, 0.5) !important;
+  color: var(--accent-hover) !important;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sidebar List                                                       */
+/* ------------------------------------------------------------------ */
+
+.sidebar-list {
+  list-style: none;
+  overflow-y: auto;
+  flex: 1;
+  padding: 0 12px 12px;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sidebar Item — Preset Entry                                        */
+/* ------------------------------------------------------------------ */
+
+.sidebar-item {
+  padding: 8px 32px 8px 14px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  margin-bottom: 2px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.sidebar-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.sidebar-item.selected {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="light"] .sidebar-item.selected {
+  background: rgba(63, 155, 108, 0.08) !important;
+  border-color: rgba(63, 155, 108, 0.2) !important;
+}
+
+[data-theme="light"] .sidebar-item:hover {
+  background: rgba(63, 155, 108, 0.05) !important;
+}
+
+.sidebar-item-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-theme="light"] .sidebar-item-name {
+  color: var(--text) !important;
+}
+
+.sidebar-item-count {
+  font-size: 11px;
+  color: var(--text-faint);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sidebar-item-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sidebar-item-content .sidebar-item-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-item-name-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 2px 6px;
+  outline: none;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sidebar Close (Delete) Button                                      */
+/* ------------------------------------------------------------------ */
+
+.sidebar-item-close {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  color: var(--text-faint);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+}
+
+.sidebar-item:hover .sidebar-item-close {
+  opacity: 1;
+}
+
+.sidebar-item-close:hover {
+  color: var(--danger);
+  background: rgba(255, 59, 48, 0.12);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Pin Star                                                           */
+/* ------------------------------------------------------------------ */
+
+.sidebar-star {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  color: var(--text-faint);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.sidebar-item:hover .sidebar-star {
+  opacity: 0.5;
+}
+
+.sidebar-star.is-pinned {
+  opacity: 1;
+  color: #e8b931;
+}
+
+.sidebar-star:hover {
+  opacity: 1 !important;
+  color: #f5c842 !important;
+}
+
+[data-theme="light"] .sidebar-star.is-pinned {
+  color: #c8960e;
+}
+
+[data-theme="light"] .sidebar-star:hover {
+  color: #e8a817 !important;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Active Badge (left-side indicator)                                 */
+/* ------------------------------------------------------------------ */
+
+.sidebar-active-badge {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4px;
+  height: 28px;
+  border-radius: 0 4px 4px 0;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.sidebar-item.active .sidebar-active-badge {
+  opacity: 1;
+}
+
+.sidebar-active-badge-dot {
+  display: none;
+}
+
+.sidebar-item.active {
+  padding-left: 19px;
+  border-color: rgba(63, 155, 108, 0.2);
+  background: rgba(63, 155, 108, 0.06);
+}
+
+[data-theme="light"] .sidebar-item.active {
+  background: rgba(63, 155, 108, 0.06) !important;
+  border-color: rgba(63, 155, 108, 0.15) !important;
+}
+
+.active-indicator-dot {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Drag & Drop — Preset Reorder                                       */
+/* ------------------------------------------------------------------ */
+
+.sidebar-item.is-dragging {
+  opacity: 0.35;
+  cursor: grabbing;
+}
+
+.sidebar-item.drop-before {
+  border-top: 3px solid var(--accent) !important;
+  background: var(--accent-soft) !important;
+  border-radius: 8px !important;
+  margin-bottom: 2px;
+}
+
+.sidebar-item.drop-after {
+  border-bottom: 3px solid var(--accent) !important;
+  background: var(--accent-soft) !important;
+  border-radius: 8px !important;
+  margin-bottom: 2px;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sidebar Search                                                     */
+/* ------------------------------------------------------------------ */
+
+.sidebar-search {
+  position: relative;
+  margin-top: 10px;
+}
+
+.sidebar-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-faint);
+  pointer-events: none;
+}
+
+.sidebar-search-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 12px;
+  padding: 7px 30px 7px 32px;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.sidebar-search-input::placeholder {
+  color: var(--text-faint);
+}
+
+.sidebar-search-input:focus {
+  border-color: var(--accent);
+  background: rgba(63, 155, 108, 0.06);
+}
+
+.sidebar-search-clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--text-faint);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.12s, background 0.12s;
+}
+
+.sidebar-search-clear:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="light"] .sidebar-search-input {
+  background: rgba(0, 0, 0, 0.03) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+[data-theme="light"] .sidebar-search-input:focus {
+  border-color: var(--accent) !important;
+  background: rgba(63, 155, 108, 0.04) !important;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sidebar New Folder Form                                            */
+/* ------------------------------------------------------------------ */
+
+.sidebar-new-folder-form {
+  padding: 4px 10px;
+  margin-bottom: 4px;
+}
+
+.sidebar-new-folder-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 12px;
+  padding: 6px 8px;
+  outline: none;
+}
+
+[data-theme="light"] .sidebar-new-folder-input {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: var(--accent);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sidebar Folder Sections                                            */
+/* ------------------------------------------------------------------ */
+
+.sidebar-folder-section {
+  margin-bottom: 2px;
+}
+
+.sidebar-folder-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 6px 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  -webkit-app-region: no-drag;
+}
+
+.sidebar-folder-header:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sidebar-folder-header.is-drag-over {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  border-style: dashed;
+  outline: none;
+}
+
+[data-theme="light"] .sidebar-folder-header:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .sidebar-folder-header.is-drag-over {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.sidebar-folder-chevron {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+  color: var(--text-faint);
+  transform: rotate(90deg);
+}
+
+.sidebar-folder-header.collapsed .sidebar-folder-chevron {
+  transform: rotate(0deg);
+}
+
+.sidebar-folder-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-folder-name-ungrouped {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.6;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-folder-count {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-faint);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1px 6px;
+  border-radius: 999px;
+  margin-left: auto;
+  min-width: 30px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.sidebar-folder-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  color: var(--text-faint);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s, color 0.12s, background 0.12s;
+}
+
+.sidebar-folder-header:hover .sidebar-folder-add {
+  opacity: 1;
+}
+
+.sidebar-folder-add:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.sidebar-folder-reorder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 5px;
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+
+.sidebar-folder-header:hover .sidebar-folder-reorder {
+  opacity: 1;
+}
+
+.sidebar-folder-reorder:hover:not(:disabled) {
+  color: var(--accent);
+  background: var(--accent-soft);
+  opacity: 1;
+}
+
+.sidebar-folder-reorder:disabled {
+  opacity: 0.3;
+  cursor: default;
+  background: transparent;
+}
+
+[data-theme="light"] .sidebar-folder-reorder {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.sidebar-folder-items {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 4px 0;
+  border-radius: 6px;
+  transition: background 0.15s, border-color 0.15s;
+  min-height: 0;
+}
+
+.sidebar-folder-items.is-drag-over {
+  background: var(--accent-soft);
+  border: 1px dashed var(--accent);
+  padding: 4px 0;
+  min-height: 40px;
+}
+
+.sidebar-folder-items-hint {
+  font-size: 11px;
+  color: var(--text-faint);
+  text-align: center;
+  padding: 10px;
+  list-style: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.sidebar-folder-items.is-drag-over .sidebar-folder-items-hint {
+  opacity: 1;
+  color: var(--accent);
+}
+
+.sidebar-folder-items .sidebar-item {
+  padding-left: 28px;
+}
+
+.sidebar-folder-rename-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 6px;
+  outline: none;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+[data-theme="light"] .sidebar-folder-rename-input {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: var(--accent);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Context Menu (portaled to body)                                    */
+/* ------------------------------------------------------------------ */
+
+.sidebar-context-menu {
+  position: fixed;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px;
+  width: 130px;
+  z-index: 10000;
+}
+
+[data-theme="light"] .sidebar-context-menu {
+  background: #ffffff;
+  border-color: var(--border);
+}
+
+.sidebar-context-menu button {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+  padding: 6px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-context-menu button:hover {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.sidebar-context-menu button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sidebar-context-menu button:disabled:hover {
+  background: transparent;
+  color: var(--text);
+}
+
+.sidebar-context-danger {
+  color: var(--danger) !important;
+}
+
+.sidebar-context-danger:hover {
+  background: rgba(207, 34, 46, 0.15) !important;
+  color: #ff6b73 !important;
+}
+
+.badge-active {
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Preset Checkbox (bulk select)                                      */
+/* ------------------------------------------------------------------ */
+
+.sidebar-checkbox {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 2;
+}
+
+.sidebar-checkbox input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.sidebar-checkbox-visual {
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+  border: 1.5px solid var(--text-faint);
+  background: transparent;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-item:hover .sidebar-checkbox {
+  opacity: 0.6;
+}
+
+.sidebar-checkbox:hover {
+  opacity: 1 !important;
+}
+
+.sidebar-checkbox:hover .sidebar-checkbox-visual {
+  border-color: var(--text-muted);
+}
+
+.sidebar-checkbox.is-checked {
+  opacity: 1;
+}
+
+.sidebar-checkbox.is-checked .sidebar-checkbox-visual {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.sidebar-checkbox.is-checked .sidebar-checkbox-visual::after {
+  content: '';
+  width: 4px;
+  height: 7px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  margin-top: -2px;
+}
+
+[data-theme="light"] .sidebar-checkbox.is-checked .sidebar-checkbox-visual {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Bulk Action Bar                                                    */
+/* ------------------------------------------------------------------ */
+
+.sidebar-bulk-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  margin: 0 12px 8px;
+  background: rgba(207, 34, 46, 0.08);
+  border: 1px solid rgba(207, 34, 46, 0.25);
+  border-radius: 8px;
+  animation: sidebar-bulk-fadein 0.15s ease;
+}
+
+@keyframes sidebar-bulk-fadein {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.sidebar-bulk-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ff6b73;
+}
+
+.sidebar-bulk-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.sidebar-bulk-clear {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s;
+}
+
+.sidebar-bulk-clear:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+}
+
+[data-theme="light"] .sidebar-bulk-clear:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.sidebar-bulk-actions .btn-destructive {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Empty / No Results State                                           */
+/* ------------------------------------------------------------------ */
+
+.sidebar-empty {
+  font-size: 13px;
+  color: var(--text-faint);
+  padding: 24px 16px;
+  text-align: center;
+  list-style: none;
+}

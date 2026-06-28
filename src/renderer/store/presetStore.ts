@@ -1,5 +1,5 @@
 import type { StateCreator } from 'zustand'
-import type { Preset, Variable, CreatePresetInput, UpdatePresetInput, IpcResult, ActivationResult } from '../../shared/types'
+import type { Preset, Variable, CreatePresetInput, UpdatePresetInput, IpcResult, ActivationResult, ReorderItem } from '../../shared/types'
 
 export interface PresetSlice {
   presets: Preset[]
@@ -8,10 +8,11 @@ export interface PresetSlice {
   isLoading: boolean
   error: string | null
   loadPresets: () => Promise<void>
-  createPreset: (name: string) => Promise<Preset | null>
+  createPreset: (name: string, group?: string) => Promise<Preset | null>
   updatePreset: (id: string, data: UpdatePresetInput) => Promise<Preset | null>
   deletePreset: (id: string) => Promise<boolean>
   duplicatePreset: (id: string) => Promise<Preset | null>
+  reorderPresets: (items: ReorderItem[]) => Promise<boolean>
   activatePreset: (id: string) => Promise<IpcResult<ActivationResult> | null>
   deactivatePreset: () => Promise<IpcResult<boolean> | null>
   selectPreset: (id: string | null) => void
@@ -19,7 +20,7 @@ export interface PresetSlice {
 }
 
 function getApi(): Window['envApi'] | null {
-  return (window as any).envApi ?? null
+  return window.envApi ?? null
 }
 
 export const createPresetSlice: StateCreator<PresetSlice> = (set, get) => ({
@@ -44,19 +45,23 @@ export const createPresetSlice: StateCreator<PresetSlice> = (set, get) => ({
         isLoading: false,
       })
     } else {
-      set({ error: presetResult.error?.message ?? 'Failed to load presets', isLoading: false })
+      const errMsg = presetResult.error?.message ?? 'Failed to load presets'
+      set({ error: errMsg, isLoading: false })
+      ;(get() as any).showToast?.(errMsg, 'error')
     }
   },
 
-  createPreset: async (name: string) => {
+  createPreset: async (name: string, group?: string) => {
     const api = getApi()
     if (!api) return null
-    const result = await api.preset.create({ name })
+    const result = await api.preset.create({ name, group })
     if (result.success && result.data) {
       set(state => ({ presets: [...state.presets, result.data!] }))
       return result.data
     }
-    set({ error: result.error?.message ?? 'Failed to create preset' })
+    const errMsg = result.error?.message ?? 'Failed to create preset'
+    set({ error: errMsg })
+    ;(get() as any).showToast?.(errMsg, 'error')
     return null
   },
 
@@ -70,7 +75,9 @@ export const createPresetSlice: StateCreator<PresetSlice> = (set, get) => ({
       }))
       return result.data
     }
-    set({ error: result.error?.message ?? 'Failed to update preset' })
+    const errMsg = result.error?.message ?? 'Failed to update preset'
+    set({ error: errMsg })
+    ;(get() as any).showToast?.(errMsg, 'error')
     return null
   },
 
@@ -86,7 +93,9 @@ export const createPresetSlice: StateCreator<PresetSlice> = (set, get) => ({
       }))
       return true
     }
-    set({ error: result.error?.message ?? 'Failed to delete preset' })
+    const errMsg = result.error?.message ?? 'Failed to delete preset'
+    set({ error: errMsg })
+    ;(get() as any).showToast?.(errMsg, 'error')
     return false
   },
 
@@ -98,8 +107,28 @@ export const createPresetSlice: StateCreator<PresetSlice> = (set, get) => ({
       set(state => ({ presets: [...state.presets, result.data!] }))
       return result.data
     }
-    set({ error: result.error?.message ?? 'Failed to duplicate preset' })
+    const errMsg = result.error?.message ?? 'Failed to duplicate preset'
+    set({ error: errMsg })
+    ;(get() as any).showToast?.(errMsg, 'error')
     return null
+  },
+
+  reorderPresets: async (items: ReorderItem[]) => {
+    const api = getApi()
+    if (!api) return false
+    const result = await api.preset.reorder(items)
+    if (result.success) {
+      // Update local state with new positions so the UI re-sorts
+      const posMap = new Map(items.map(i => [i.id, i.position]))
+      set(state => ({
+        presets: state.presets.map(p => posMap.has(p.id) ? { ...p, position: posMap.get(p.id)! } : p),
+      }))
+      return true
+    }
+    const errMsg = result.error?.message ?? 'Failed to reorder presets'
+    set({ error: errMsg })
+    ;(get() as any).showToast?.(errMsg, 'error')
+    return false
   },
 
   activatePreset: async (id: string) => {
@@ -110,7 +139,9 @@ export const createPresetSlice: StateCreator<PresetSlice> = (set, get) => ({
     if (result.success) {
       set({ activePresetId: id, isLoading: false })
     } else {
-      set({ error: result.error?.message ?? 'Failed to activate preset', isLoading: false })
+      const errMsg = result.error?.message ?? 'Failed to activate preset'
+      set({ error: errMsg, isLoading: false })
+      ;(get() as any).showToast?.(errMsg, 'error')
     }
     return result as IpcResult<ActivationResult>
   },
@@ -123,7 +154,9 @@ export const createPresetSlice: StateCreator<PresetSlice> = (set, get) => ({
     if (result.success) {
       set({ activePresetId: null, isLoading: false })
     } else {
-      set({ error: result.error?.message ?? 'Failed to deactivate preset', isLoading: false })
+      const errMsg = result.error?.message ?? 'Failed to deactivate preset'
+      set({ error: errMsg, isLoading: false })
+      ;(get() as any).showToast?.(errMsg, 'error')
     }
     return result
   },

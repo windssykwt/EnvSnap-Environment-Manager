@@ -58,69 +58,18 @@ export async function deleteUserEnvVar(key: string): Promise<void> {
   })
 }
 
-export async function applyPresetVariables(
+/**
+ * @deprecated Use the driver-based `applyPresetVariables` from `./apply.ts` instead.
+ * This function is kept for reference but no longer exported from the barrel.
+ */
+async function _legacyApplyPresetVariables(
   variables: Array<{ key: string; value: string }>,
   keysToDelete: string[] = []
 ): Promise<{
   appliedCount: number
   failedVariables: Array<{ key: string; reason: string }>
 }> {
-  // Validate all keys first
-  const invalid = variables.filter(v => !isValidEnvKey(v.key))
-  if (invalid.length > 0) {
-    return {
-      appliedCount: 0,
-      failedVariables: invalid.map(v => ({ key: v.key, reason: 'Invalid key name' })),
-    }
-  }
-
-  // Batch all writes into a single PowerShell invocation for performance.
-  // $ErrorActionPreference = 'Stop' ensures any error terminates the script
-  // and surfaces through the exit code rather than silently continuing.
-  const lines: string[] = ['$ErrorActionPreference = \'Stop\'']
-
-  for (const v of variables) {
-    lines.push(`[Environment]::SetEnvironmentVariable('${escapePS(v.key)}', '${escapePS(v.value)}', 'User')`)
-  }
-
-  for (const key of keysToDelete) {
-    if (isValidEnvKey(key)) {
-      lines.push(`[Environment]::SetEnvironmentVariable('${escapePS(key)}', [NullString]::Value, 'User')`)
-    }
-  }
-
-  // Nothing to do
-  if (lines.length === 1) {
-    return { appliedCount: 0, failedVariables: [] }
-  }
-
-  const script = lines.join('\n')
-
-  return new Promise((resolve) => {
-    execFile(
-      'powershell.exe',
-      ['-NoProfile', '-NonInteractive', '-Command', script],
-      { timeout: 30000 },
-      (err, _stdout, stderr) => {
-        if (err) {
-          const reason = stderr?.trim() || err.message
-          logger.error('Failed to apply preset variables', { reason: reason.substring(0, 200) })
-          resolve({
-            appliedCount: 0,
-            failedVariables: variables.map(v => ({ key: v.key, reason: reason.substring(0, 200) })),
-          })
-          return
-        }
-        // With $ErrorActionPreference = 'Stop', a non-zero exit also lands in err above.
-        // Any remaining stderr here is a warning — log it but treat as success.
-        if (stderr && stderr.trim()) {
-          logger.warn('PowerShell warning applying preset', { stderr: stderr.trim().substring(0, 200) })
-        }
-        resolve({
-          appliedCount: variables.length,
-          failedVariables: [],
-        })
-      }
-    )
-  })
+  void variables
+  void keysToDelete
+  throw new Error('Legacy path removed. Use apply.ts driver-based implementation.')
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAppStore } from '../store'
+import { getEnvApi } from '../hooks/useEnvApi'
 
 interface PeekResult {
   filePath: string
@@ -12,6 +13,7 @@ export function ImportDialog() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const showToast = useAppStore(s => s.showToast)
   const loadPresets = useAppStore(s => s.loadPresets)
 
@@ -23,29 +25,34 @@ export function ImportDialog() {
   }
 
   const handleOpen = async () => {
-    const api = (window as any).envApi
+    const api = getEnvApi()
     if (!api?.importExport?.peek) return
 
-    const result = await api.importExport.peek()
-    if (!result.success) {
-      // Surface the validator's message directly so the user knows
-      // exactly what is wrong with the file.
-      setPeek(null)
-      setErrorMessage(result.error?.message ?? 'Failed to read the file')
+    setIsLoading(true)
+    try {
+      const result = await api.importExport.peek()
+      if (!result.success) {
+        // Surface the validator's message directly so the user knows
+        // exactly what is wrong with the file.
+        setPeek(null)
+        setErrorMessage(result.error?.message ?? 'Failed to read the file')
+        setIsOpen(true)
+        return
+      }
+      if (!result.data) {
+        // User cancelled the dialog. Stay closed.
+        return
+      }
+      setPeek(result.data)
+      setErrorMessage(null)
       setIsOpen(true)
-      return
+    } finally {
+      setIsLoading(false)
     }
-    if (!result.data) {
-      // User cancelled the dialog. Stay closed.
-      return
-    }
-    setPeek(result.data)
-    setErrorMessage(null)
-    setIsOpen(true)
   }
 
   const handleImport = async () => {
-    const api = (window as any).envApi
+    const api = getEnvApi()
     if (!api?.importExport?.importPresets) return
 
     setIsImporting(true)
@@ -74,7 +81,9 @@ export function ImportDialog() {
 
   if (!isOpen) {
     return (
-      <button className="btn btn-secondary" onClick={handleOpen}>Import Presets</button>
+      <button className="btn btn-secondary" onClick={handleOpen} disabled={isLoading}>
+        {isLoading ? 'Reading file…' : 'Import Presets'}
+      </button>
     )
   }
 

@@ -6,6 +6,7 @@ export const IPC = {
     UPDATE: 'preset:update',
     DELETE: 'preset:delete',
     DUPLICATE: 'preset:duplicate',
+    REORDER: 'preset:reorder',
     ACTIVATE: 'preset:activate',
     DEACTIVATE: 'preset:deactivate',
     GET_ACTIVE_ID: 'preset:getActiveId',
@@ -20,6 +21,7 @@ export const IPC = {
   SETTINGS: {
     GET: 'settings:get',
     UPDATE: 'settings:update',
+    GET_DEFAULT_PATH: 'settings:getDefaultPath',
   },
   ENV: {
     READ_ALL: 'env:readAll',
@@ -35,14 +37,20 @@ export const IPC = {
     EXPORT: 'config:export',
     IMPORT: 'config:import',
   },
+  PROFILE: {
+    EXPORT: 'profile:export',
+    IMPORT: 'profile:import',
+  },
   WINDOW: {
     MINIMIZE: 'window:minimize',
     MAXIMIZE_TOGGLE: 'window:maximizeToggle',
     CLOSE: 'window:close',
+    RELAUNCH: 'window:relaunch',
   },
   DIALOG: {
     OPEN_FILE: 'dialog:openFile',
     SAVE_FILE: 'dialog:saveFile',
+    OPEN_DIRECTORY: 'dialog:openDirectory',
   },
 } as const
 
@@ -64,3 +72,6 @@ export const DEFAULT_SETTINGS = {
 export const ENV_KEY_REGEX = /^[^=\0\x00-\x1F\s](?:[^=\0\x00-\x1F]*[^=\0\x00-\x1F\s])?$/
 
 export const APP_NAME = 'EnvSnap'
+
+/** Maximum number of backup entries to keep before auto-pruning the oldest. */
+export const MAX_BACKUP_ENTRIES = 100

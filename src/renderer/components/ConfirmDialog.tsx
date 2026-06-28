@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAppStore } from '../store'
 
 export function ConfirmDialog() {
   const confirmDialog = useAppStore(s => s.confirmDialog)
   const closeConfirm = useAppStore(s => s.closeConfirm)
   const cancelRef = useRef<HTMLButtonElement>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
 
   // Auto-focus the Cancel button when dialog opens (safety for destructive actions)
   useEffect(() => {
@@ -18,6 +19,17 @@ export function ConfirmDialog() {
   const isDestructive = confirmDialog.destructive ?? false
   const confirmLabel = confirmDialog.confirmLabel ?? 'Confirm'
 
+  const handleConfirm = async () => {
+    if (isProcessing) return
+    setIsProcessing(true)
+    try {
+      await confirmDialog.onConfirm()
+    } finally {
+      setIsProcessing(false)
+      closeConfirm()
+    }
+  }
+
   return (
     <div className="modal-overlay" onClick={closeConfirm}>
       <div className="modal" onClick={e => e.stopPropagation()}>
@@ -28,17 +40,16 @@ export function ConfirmDialog() {
             ref={cancelRef}
             className="btn btn-secondary"
             onClick={closeConfirm}
+            disabled={isProcessing}
           >
             Cancel
           </button>
           <button
             className={`btn ${isDestructive ? 'btn-destructive' : 'btn-primary'}`}
-            onClick={() => {
-              confirmDialog.onConfirm()
-              closeConfirm()
-            }}
+            onClick={handleConfirm}
+            disabled={isProcessing}
           >
-            {confirmLabel}
+            {isProcessing ? 'Processing…' : confirmLabel}
           </button>
         </div>
       </div>

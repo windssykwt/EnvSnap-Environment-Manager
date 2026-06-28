@@ -1,0 +1,400 @@
+/* ====================================================================
+   Variable Table (vt-*) — dark glass, dense but breathable
+   ==================================================================== */
+
+.vt {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.vt-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 4px;
+}
+
+.vt-toolbar-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.vt-count {
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--text-faint);
+}
+
+.vt-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.vt-badge-warn {
+  color: var(--warning);
+  background: rgba(242, 147, 57, 0.12);
+  border-color: rgba(242, 147, 57, 0.35);
+}
+
+.vt-filter {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 12px;
+  padding: 7px 12px;
+  width: 220px;
+  max-width: 40%;
+  outline: none;
+  transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+
+.vt-filter::placeholder {
+  color: var(--text-faint);
+}
+
+.vt-filter:focus {
+  border-color: var(--accent);
+  background: rgba(63, 155, 108, 0.08);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.vt-grid {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+}
+
+.vt-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(220px, 2fr) 36px;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.14s ease;
+}
+
+.vt-row:last-child {
+  border-bottom: none;
+}
+
+.vt-head {
+  background: rgba(255, 255, 255, 0.025);
+  padding: 10px 14px;
+}
+
+.vt-head span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+[data-theme="light"] .vt-head span {
+  color: var(--text-faint) !important;
+}
+
+.vt-row-data:hover {
+  background: rgba(63, 155, 108, 0.06);
+}
+
+.vt-row-data:focus-within {
+  background: rgba(63, 155, 108, 0.08);
+}
+
+.vt-row-data.is-invalid {
+  background: rgba(242, 147, 57, 0.06);
+}
+
+.vt-row-data.is-invalid:hover,
+.vt-row-data.is-invalid:focus-within {
+  background: rgba(242, 147, 57, 0.12);
+}
+
+[data-theme="light"] .vt-row-data {
+  border-color: var(--border) !important;
+}
+
+.vt-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.vt-cell-value {
+  position: relative;
+}
+
+.vt-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 9px;
+  padding: 9px 12px;
+  color: #ffffff;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+
+.vt-input::placeholder {
+  color: var(--text-faint);
+  letter-spacing: 0.02em;
+}
+
+.vt-input:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.vt-input:focus {
+  background: rgba(63, 155, 108, 0.08);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.vt-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+[data-theme="light"] .vt-input {
+  background: #ffffff !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text) !important;
+}
+
+[data-theme="light"] .vt-input:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(63, 155, 108, 0.15) !important;
+}
+
+.vt-input-key {
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', ui-monospace, monospace;
+  letter-spacing: 0.02em;
+}
+
+.vt-input-key::placeholder {
+  text-transform: none;
+}
+
+.vt-row-data.is-invalid .vt-input-key {
+  border-color: rgba(242, 147, 57, 0.5);
+}
+
+.vt-row-data.is-invalid .vt-input-key:focus {
+  box-shadow: 0 0 0 3px rgba(242, 147, 57, 0.18);
+}
+
+.vt-input-value {
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', ui-monospace, monospace;
+  padding-right: 36px;
+}
+
+.vt-icon-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-faint);
+  font-size: 14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease, opacity 0.14s ease;
+  opacity: 0.7;
+  padding: 0;
+}
+
+.vt-cell-value .vt-icon-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.vt-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  opacity: 1;
+}
+
+.vt-cell-actions .vt-icon-btn {
+  opacity: 0.85;
+}
+
+.vt-row-data:hover .vt-cell-actions .vt-icon-btn,
+.vt-row-data:focus-within .vt-cell-actions .vt-icon-btn {
+  opacity: 1;
+}
+
+.vt-delete {
+  font-size: 22px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.vt-delete:hover {
+  background: rgba(207, 34, 46, 0.15);
+  border-color: rgba(207, 34, 46, 0.4);
+  color: #ff6b73;
+  opacity: 1;
+}
+
+[data-theme="light"] .vt-delete {
+  color: var(--text-faint) !important;
+}
+
+[data-theme="light"] .vt-delete:hover {
+  color: var(--danger) !important;
+}
+
+.vt-issue {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--warning);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vt-issue::before {
+  content: '\26A0';
+  font-size: 13px;
+}
+
+.vt-no-match {
+  padding: 22px 14px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+.vt-empty {
+  border: 1px dashed var(--border-strong);
+  border-radius: 14px;
+  padding: 36px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.vt-empty-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.vt-empty-sub {
+  font-size: 13px;
+  color: var(--text-faint);
+  max-width: 360px;
+  margin-bottom: 12px;
+}
+
+.vt-add {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px dashed var(--border-strong);
+  color: var(--text);
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.vt-add:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+.vt-add-plus {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.vt-add-first {
+  background: transparent !important;
+  border: 1.5px dashed var(--accent) !important;
+  color: var(--accent) !important;
+  box-shadow: none !important;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 6px;
+}
+
+.vt-add-first:hover:not(:disabled) {
+  background: var(--accent-soft) !important;
+  border-color: var(--accent-hover) !important;
+  color: var(--accent-hover) !important;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Variable Table — Drag Handle                                       */
+/* ------------------------------------------------------------------ */
+
+.vt-cell-drag {
+  width: 24px;
+  min-width: 24px;
+  max-width: 24px;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vt-cell-drag:active {
+  cursor: grabbing;
+}
+
+.vt-drag-handle {
+  color: var(--text-faint);
+  opacity: 0.4;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.vt-row-data:hover .vt-drag-handle {
+  opacity: 0.8;
+  color: var(--text-muted);
+}
+
+.vt-row-data.is-drag-over {
+  border-top: 2px solid var(--accent);
+  margin-top: -1px;
+}
+
+.vt-row-data[draggable="true"] {
+  cursor: default;
+}
+
+.vt-grid-draggable .vt-row {
+  grid-template-columns: 24px minmax(180px, 1fr) minmax(220px, 2fr) 36px;
+}

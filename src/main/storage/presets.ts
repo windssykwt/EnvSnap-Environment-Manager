@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
-import type { Preset, CreatePresetInput, UpdatePresetInput } from '../../shared/types'
+import type { Preset, CreatePresetInput, UpdatePresetInput, ReorderItem } from '../../shared/types'
 import { mutateData, readDataFile } from './index'
 import { archivePreset } from './backups'
 
@@ -13,16 +13,21 @@ export function getPreset(id: string): Preset | undefined {
 
 export function createPreset(input: CreatePresetInput): Promise<Preset> {
   const now = new Date().toISOString()
-  const preset: Preset = {
-    id: uuidv4(),
-    name: input.name,
-    variables: input.variables ?? [],
-    createdAt: now,
-    updatedAt: now,
-  }
   return mutateData(data => {
-    const next = { ...data, presets: [...data.presets, preset] }
-    return { next, result: preset }
+    // Assign position at the end of the target group
+    const groupPresets = data.presets.filter(p => p.group === (input.group ?? ''))
+    const maxPos = groupPresets.reduce((max, p) => Math.max(max, p.position), -1)
+    const preset: Preset = {
+      id: uuidv4(),
+      name: input.name,
+      group: input.group ?? '',
+      position: maxPos + 1,
+      isPinned: false,
+      variables: input.variables ?? [],
+      createdAt: now,
+      updatedAt: now,
+    }
+    return { next: { ...data, presets: [...data.presets, preset] }, result: preset }
   })
 }
 
@@ -34,7 +39,9 @@ export function updatePreset(id: string, input: UpdatePresetInput): Promise<Pres
     const updated: Preset = {
       ...current,
       name: input.name !== undefined ? input.name : current.name,
+      group: input.group !== undefined ? input.group : current.group,
       variables: input.variables !== undefined ? input.variables : current.variables,
+      isPinned: input.isPinned !== undefined ? input.isPinned : current.isPinned,
       updatedAt: new Date().toISOString(),
     }
     const presets = [...data.presets]
@@ -76,14 +83,39 @@ export function duplicatePreset(id: string): Promise<Preset | null> {
     const source = data.presets.find(p => p.id === id)
     if (!source) return { next: null, result: null }
     const now = new Date().toISOString()
+    const groupPresets = data.presets.filter(p => p.group === source.group)
+    const maxPos = groupPresets.reduce((max, p) => Math.max(max, p.position), -1)
     const copy: Preset = {
       id: uuidv4(),
       name: `${source.name} (Copy)`,
+      group: source.group,
+      position: maxPos + 1,
+      isPinned: false,
       variables: source.variables.map(v => ({ ...v })),
       createdAt: now,
       updatedAt: now,
     }
     return { next: { ...data, presets: [...data.presets, copy] }, result: copy }
+  })
+}
+
+/**
+ * Atomically update positions for a batch of presets. Used by
+ * drag-to-reorder in the sidebar.
+ */
+export function reorderPresets(items: ReorderItem[]): Promise<boolean> {
+  return mutateData(data => {
+    const posMap = new Map(items.map(i => [i.id, i.position]))
+    let changed = false
+    const presets = data.presets.map(p => {
+      if (posMap.has(p.id)) {
+        changed = true
+        return { ...p, position: posMap.get(p.id)!, updatedAt: new Date().toISOString() }
+      }
+      return p
+    })
+    if (!changed) return { next: null, result: false }
+    return { next: { ...data, presets }, result: true }
   })
 }
 
