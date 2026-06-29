@@ -42,34 +42,60 @@ export function SettingsPanel() {
     }
   }
 
-  const handleStorageSave = async () => {
-    if (storageDraft === null) return
-    const path = storageDraft.trim()
-    await updateSettings({ storageLocation: path })
-    setStorageDraft(null)
+  /** Ask the user to confirm restart, then save + relaunch. */
+  const doRelaunchConfirm = (title: string, message: string) => {
     showConfirm(
-      'Restart Required',
-      'Storage location has been updated. Restart EnvSnap now to use the new location?',
-      () => {
+      title,
+      message,
+      async () => {
         const api = getEnvApi()
-        api?.window?.relaunch()
+        const res = await api?.window?.relaunch()
+        if (res && !res.success) {
+          showToast(res.error?.message ?? 'Auto-restart failed. Please reopen EnvSnap manually.', 'error')
+        }
       },
       { confirmLabel: 'Restart Now' },
     )
   }
 
+  const handleStorageSave = async () => {
+    if (storageDraft === null) return
+    const path = storageDraft.trim()
+    setStorageDraft(null)
+    // Show the dialog BEFORE the IPC call so the user sees the modal
+    // before any state-driven layout change can happen.
+    doRelaunchConfirm(
+      'Restart Required',
+      'Storage location has been updated. Restart EnvSnap now to use the new location?',
+    )
+    // IPC call happens after the dialog is already on-screen
+    const api = getEnvApi()
+    const result = await api.settings.update({ storageLocation: path })
+    if (!result.success) {
+      showToast(result.error?.message ?? 'Failed to update storage location', 'error')
+      return
+    }
+    // Sync store state with the returned settings
+    if (result.data) {
+      useAppStore.setState({ settings: result.data })
+    }
+  }
+
   const handleStorageReset = async () => {
     setStorageDraft(null)
-    await updateSettings({ storageLocation: '' })
-    showConfirm(
+    doRelaunchConfirm(
       'Restart Required',
       'Storage location has been reset to default. Restart EnvSnap now?',
-      () => {
-        const api = getEnvApi()
-        api?.window?.relaunch()
-      },
-      { confirmLabel: 'Restart Now' },
     )
+    const api = getEnvApi()
+    const result = await api.settings.update({ storageLocation: '' })
+    if (!result.success) {
+      showToast(result.error?.message ?? 'Failed to reset storage location', 'error')
+      return
+    }
+    if (result.data) {
+      useAppStore.setState({ settings: result.data })
+    }
   }
 
   const handleThemeChange = async (mode: ThemeMode) => {
@@ -235,11 +261,13 @@ export function SettingsPanel() {
               >
                 Save
               </button>
-              {settings.storageLocation && (
-                <button className="btn btn-ghost" onClick={handleStorageReset}>
-                  Reset to Default
-                </button>
-              )}
+              <button
+                className="btn btn-ghost"
+                onClick={handleStorageReset}
+                disabled={!settings.storageLocation}
+              >
+                Reset to Default
+              </button>
             </div>
           </div>
         </div>

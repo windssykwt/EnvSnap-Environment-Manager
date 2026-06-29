@@ -171,6 +171,61 @@ export function getDataPath(): string {
 }
 
 /**
+ * Migrate all stored data from the current storage location to a new path.
+ * Copies data.json and backups.json to the destination, then updates the
+ * pointer file at the default location so subsequent starts use the new
+ * storage directory.
+ *
+ * This function is purely a file-level operation — it does NOT update
+ * session-level singletons. The caller should use `updateSettings()` to
+ * persist the new path; the running session continues at its current
+ * location until the user restarts.
+ *
+ * @param newPath     Absolute path to the new storage directory.
+ * @param clearPointer If true, the pointer is set to "" (use default path)
+ *                     instead of newPath. Pass this when resetting to default.
+ */
+export async function moveStorageTo(newPath: string, clearPointer = false): Promise<void> {
+  const oldPath = resolveStorageLocation()
+  const resolvedNew = path.resolve(newPath)
+  if (oldPath === resolvedNew) return
+
+  // Ensure caches are loaded before we start
+  if (!dataCache) dataCache = loadDataFromDisk()
+  if (!backupsCache) backupsCache = loadBackupsFromDisk()
+
+  // Deep-clone so originals are safe if the write fails
+  const data: DataFile = JSON.parse(JSON.stringify(dataCache))
+  const backups: BackupsFile = JSON.parse(JSON.stringify(backupsCache))
+
+  // Update the data's own storageLocation to reflect where it lives now
+  data.settings.storageLocation = clearPointer ? '' : resolvedNew
+
+  // Write both files to the new location
+  ensureDirSync(resolvedNew)
+  await atomicWriteAsync(path.join(resolvedNew, DATA_FILENAME), JSON.stringify(data, null, 2))
+  await atomicWriteAsync(path.join(resolvedNew, BACKUPS_FILENAME), JSON.stringify(backups, null, 2))
+
+  // Update the pointer at the default location so `resolveStorageLocation()`
+  // picks up the new path on next start.
+  const defaultDir = getDefaultStorageLocation()
+  const defaultDataPath = path.join(defaultDir, DATA_FILENAME)
+  let defaultData: DataFile
+  try {
+    const result = readFileWithDecryption(defaultDataPath)
+    defaultData = result ? (JSON.parse(result.content) as DataFile) : getDefaultData()
+  } catch {
+    defaultData = getDefaultData()
+  }
+  defaultData.settings = { ...DEFAULT_SETTINGS, ...defaultData.settings }
+  defaultData.settings.storageLocation = clearPointer ? '' : resolvedNew
+  ensureDirSync(defaultDir)
+  await atomicWriteAsync(defaultDataPath, JSON.stringify(defaultData, null, 2))
+
+  logger.info(`Storage copied from "${oldPath}" to "${resolvedNew}"`)
+}
+
+/**
  * Synchronous read used by call sites that have already taken the
  * mutex (i.e. inside a `mutateData` callback). Don't call this from
  * outside the storage module. It bypasses the mutex on purpose.
